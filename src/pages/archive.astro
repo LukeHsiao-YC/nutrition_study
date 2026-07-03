@@ -1,0 +1,55 @@
+---
+import { getCollection } from 'astro:content';
+const allArticles = await getCollection('articles');
+
+const sortedArticles = allArticles.sort((a, b) => 
+  new Date(b.data.pubDate).valueOf() - new Date(a.data.pubDate).valueOf()
+);
+
+const groupedArticles = {};
+sortedArticles.forEach(article => {
+  const date = new Date(article.data.pubDate);
+  const monthYear = `${date.getFullYear()}年${date.getMonth() + 1}月`;
+  if (!groupedArticles[monthYear]) {
+    groupedArticles[monthYear] = [];
+  }
+  groupedArticles[monthYear].push(article);
+});
+---
+
+<html lang="zh-TW">
+  <head>
+    <meta charset="utf-8" />
+    <title>歷史文獻庫</title>
+  </head>
+  <body style="max-width: 800px; margin: 0 auto; padding: 20px; font-family: sans-serif;">
+    <div style="margin-bottom: 30px;">
+      <a href="/" style="color: #666; text-decoration: none;">返回首頁</a>
+      <h1 style="margin-top: 10px;">歷史文獻庫</h1>
+      <p style="color: #666;">這裡收錄了所有過去抓取過的醫學與營養期刊文獻，按月份分類整理。</p>
+    </div>
+
+    {Object.keys(groupedArticles).map((monthYear) => (
+      <div style="margin-bottom: 40px;">
+        <h2 style="border-bottom: 2px solid #2c5282; padding-bottom: 5px; color: #2c5282;">{monthYear}</h2>
+        <ul style="list-style: none; padding: 0;">
+          {groupedArticles[monthYear].map((article) => (
+            <li style="margin-bottom: 15px; padding: 15px; background: #f8fafc; border-radius: 6px; border-left: 4px solid #4299e1;">
+              <a href={article.data.link} target="_blank" style="text-decoration: none; color: #2b6cb0; font-weight: bold; font-size: 1.1rem; display: block; margin-bottom: 5px;">
+                {article.data.title}
+              </a>
+              <div style="font-size: 0.85rem; color: #718096; margin-bottom: 8px;">
+                {article.data.journal} | 收錄於 {article.data.pubDate} | 分類：{article.data.category}
+              </div>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                {article.data.tags.map((tag) => (
+                  <a href={`/tags/${tag}`} style="font-size: 0.75rem; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; color: #4a5568; text-decoration: none;">#{tag}</a>
+                ))}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </body>
+</html>
