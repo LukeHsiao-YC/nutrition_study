@@ -1,20 +1,73 @@
-import feedparser
+import urllib.request
+import urllib.parse
+import json
+import xml.etree.ElementTree as ET
 import os
 import re
 from datetime import datetime
 from google import genai
 
-# ★ 關鍵更新：偽裝成一般 Chrome 瀏覽器，避免被醫學期刊的防火牆阻擋
-feedparser.USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-
+# 讀取 Gemini 金鑰
 api_key = os.environ.get("GEMINI_API_KEY")
 client = genai.Client(api_key=api_key)
 
-JOURNAL_FEEDS = {
-    "AJCN": "https://ajcn.nutrition.org/rss", 
-    "IJBNPA": "https://ijbnpa.biomedcentral.com/articles/most-recent/rss.xml",
-    "JPGN": "https://journals.lww.com/jpgn/_layouts/15/OAKS.Journals/feed.aspx?FeedType=CurrentIssue"
+# 改用 PubMed 的期刊標準全名進行精準搜尋
+JOURNAL_QUERIES = {
+    "AJCN": '"The American journal of clinical nutrition"[Journal]',
+    "IJBNPA": '"International journal of behavioral nutrition and physical activity"[Journal]',
+    "JPGN": '"Journal of pediatric gastroenterology and nutrition"[Journal]'
 }
+
+def fetch_pubmed_articles(journal_query, count=3):
+    """透過 PubMed 官方 API 取得最新文獻標題與摘要"""
+    articles = []
+    try:
+        # 第一步：搜尋最新文獻的 PMID
+        encoded_query = urllib.parse.quote(journal_query)
+        search_url = f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term={encoded_query}&retmode=json&retmax={count}&sort=date"
+        
+        # 為了避免偶爾的網路波動，加入 User-Agent
+        req = urllib.request.Request(search_url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req) as response:
+            search_data = json.loads(response.read().decode())
+        
+        id_list = search_data['esearchresult'].get('idlist', [])
+        if not id_list:
+            return articles
+            
+        # 第二步：根據抓到的 PMID，去把完整的摘要抓回來
+        ids_str = ",".join(id_list)
+        fetch_url = f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id={ids_str}&retmode=xml"
+        
+        req_fetch = urllib.request.Request(fetch_url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req_fetch) as response:
+            xml_data = response.read()
+        
+        # 解析 XML 資料
+        root = ET.fromstring(xml_data)
+        for article in root.findall('.//PubmedArticle'):
+            # 取得標題
+            title_elem = article.find('.//ArticleTitle')
+            title = title_elem.text if title_elem is not None else "無標題"
+            
+            # 取得摘要 (PubMed 摘要有時會分段，需合併)
+            abstract_texts = article.findall('.//AbstractText')
+            summary = " ".join([elem.text for elem in abstract_texts if elem.text]) if abstract_texts else "無摘要內容"
+            
+            # 取得 PMID 並組合成網址
+            pmid_elem = article.find('.//PMID')
+            pmid = pmid_elem.text if pmid_elem is not None else ""
+            link = f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/" if pmid else ""
+            
+            articles.append({
+                "title": title,
+                "summary": summary,
+                "link": link
+            })
+    except Exception as e:
+        print(f"PubMed 抓取失敗: {e}")
+        
+    return articles
 
 def generate_article_analysis(title, summary, link):
     prompt = f"""
@@ -47,33 +100,28 @@ def main():
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    for journal_name, feed_url in JOURNAL_FEEDS.items():
-        print(f"--- 正在嘗試抓取 {journal_name} ---")
-        feed = feedparser.parse(feed_url)
+    for journal_name, query in JOURNAL_QUERIES.items():
+        print(f"--- 正在透過 PubMed 搜尋 {journal_name} ---")
         
-        # ★ 新增檢查機制：印出到底抓到幾篇，若被擋下會跳出警告
-        entries_count = len(feed.entries)
-        print(f"伺服器回應：找到 {entries_count} 篇文章")
+        # 呼叫自訂的 PubMed 抓取函式
+        articles = fetch_pubmed_articles(query, count=3)
+        print(f"伺服器回應：找到 {len(articles)} 篇文章\n")
         
-        if entries_count == 0:
-            print(f"⚠️ 警告：無法從 {journal_name} 獲取資料，可能是防火牆阻擋或網址失效。\n")
-            continue
-        
-        for entry in feed.entries[:3]:
-            title = entry.title
-            link = entry.link
-            
-            summary = entry.get("summary", entry.get("description", "無摘要內容"))
+        for article in articles:
+            title = article['title']
+            summary = article['summary']
+            link = article['link']
             
             if summary == "無摘要內容" or len(summary) < 20:
-                print(f"跳過無摘要文章: {title}")
+                print(f"跳過無摘要文章: {title[:30]}...")
                 continue
                 
-            print(f"處理中: {title} (呼叫 AI 分析...)")
+            print(f"處理中: {title[:50]}... (呼叫 AI 分析...)")
             
             try:
                 ai_content = generate_article_analysis(title, summary, link)
                 
+                # 清理檔名
                 safe_title = re.sub(r'[\\/*?:"<>|]', "", title)[:50]
                 date_str = datetime.now().strftime("%Y-%m-%d")
                 filename = f"{output_dir}/{date_str}-{journal_name}-{safe_title}.md"
@@ -91,11 +139,11 @@ def main():
                     f.write(f"---\n\n")
                     f.write(ai_content)
                 
-                print(f"✅ 成功生成: {filename}")
+                print(f"✅ 成功生成 Markdown 檔案！")
                 
             except Exception as e:
-                print(f"❌ 處理時發生錯誤: {title}，原因: {str(e)}")
-        print("\n") # 換行讓版面乾淨一點
+                print(f"❌ 處理時發生錯誤，原因: {str(e)}")
+        print("-" * 40)
 
 if __name__ == "__main__":
     main()
