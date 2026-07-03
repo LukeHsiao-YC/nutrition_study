@@ -11,7 +11,6 @@ import google.generativeai as genai
 api_key = os.environ.get("GEMINI_API_KEY")
 genai.configure(api_key=api_key)
 
-# 自動偵測模型
 target_model = "gemini-1.5-flash"
 try:
     available_models = []
@@ -33,14 +32,23 @@ except Exception as e:
 
 model = genai.GenerativeModel(target_model)
 
-# 包含新增的三本期刊
 JOURNAL_QUERIES = {
     "AJCN": '"The American journal of clinical nutrition"[Journal]',
     "IJBNPA": '"International journal of behavioral nutrition and physical activity"[Journal]',
     "JPGN": '"Journal of pediatric gastroenterology and nutrition"[Journal]',
     "JNEB": '"Journal of nutrition education and behavior"[Journal]',
     "AdvNutr": '"Advances in nutrition (Bethesda, Md.)"[Journal]',
-    "MCN": '"Maternal & child nutrition"[Journal]'
+    "MCN": '"Maternal & child nutrition"[Journal]',
+    "ClinNutr": '"Clinical nutrition (Edinburgh, Scotland)"[Journal]',
+    "PedObes": '"Pediatric obesity"[Journal]',
+    "PHN": '"Public health nutrition"[Journal]',
+    "AJPM": '"American journal of preventive medicine"[Journal]',
+    "Appetite": '"Appetite"[Journal]',
+    "PEC": '"Patient education and counseling"[Journal]',
+    "ObesRev": '"Obesity reviews"[Journal]',
+    "IJO": '"International journal of obesity"[Journal]',
+    "EJE": '"European journal of epidemiology"[Journal]',
+    "IJE": '"International journal of epidemiology"[Journal]'
 }
 
 def fetch_pubmed_articles(journal_query, count=3):
@@ -87,7 +95,6 @@ def fetch_pubmed_articles(journal_query, count=3):
     return articles
 
 def generate_article_analysis(title, summary):
-    # ★ 關鍵更新：要求 AI 直接輸出 JSON 格式，方便我們做資料拆解
     prompt = f"""
     你是一位專業的醫學與營養學研究助理。請閱讀以下醫學期刊文章的標題與摘要。
 
@@ -129,18 +136,15 @@ def main():
             try:
                 ai_response = generate_article_analysis(title, summary)
                 
-                # ★ 關鍵更新：用正規表達式把 JSON 內容安全地抓出來
                 json_match = re.search(r'\{.*\}', ai_response, re.DOTALL)
                 if not json_match:
                     raise ValueError("AI 沒有回傳正確的 JSON 格式")
                 
                 data = json.loads(json_match.group(0))
                 
-                # 取得陣列資料並轉成 YAML 的格式
                 tags_list = data.get("tags", ["未分類"])
                 tags_yaml = "[" + ", ".join([f'"{t}"' for t in tags_list]) + "]"
                 
-                # 清除標題中可能導致 YAML 錯誤的雙引號
                 safe_title_frontmatter = title.replace('"', "'")
                 safe_title_file = re.sub(r'[\\/*?:"<>|]', "", title)[:50]
                 date_str = datetime.now().strftime("%Y-%m-%d")
@@ -150,8 +154,6 @@ def main():
                     print(f"檔案已存在，跳過: {filename}")
                     continue
                 
-                # ★ 關鍵更新：組合最終的 Markdown，把 tags 寫進 Frontmatter
-               # ★ 關鍵更新：加入英文原文區塊
                 markdown_content = f"""---
 title: "{safe_title_frontmatter}"
 journal: "{journal_name}"
@@ -172,22 +174,12 @@ tags: {tags_yaml}
 """
                 with open(filename, "w", encoding="utf-8") as f:
                     f.write(markdown_content)
----
-
-### 重點摘要
-{data.get('summary', '無摘要資料')}
-
-### 研究縫隙 (Research Gap)
-{data.get('gap', '無研究縫隙資料')}
-"""
-                with open(filename, "w", encoding="utf-8") as f:
-                    f.write(markdown_content)
                 
-                print(f"✅ 成功生成並標記標籤！")
+                print(f"[成功] 成功生成並標記標籤！")
                 time.sleep(2)
                 
             except Exception as e:
-                print(f"❌ 處理時發生錯誤，原因: {str(e)}")
+                print(f"[錯誤] 處理時發生錯誤，原因: {str(e)}")
         print("*" * 40)
 
 if __name__ == "__main__":
