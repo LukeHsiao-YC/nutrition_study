@@ -47,7 +47,12 @@ model = genai.GenerativeModel(target_model)
 JOURNAL_QUERIES = {
     "AJCN": '"The American journal of clinical nutrition"[Journal]',
     "IJBNPA": '"International journal of behavioral nutrition and physical activity"[Journal]',
-    "JPGN": '"Journal of pediatric gastroenterology and nutrition"[Journal]'
+    "JPGN": '"Journal of pediatric gastroenterology and nutrition"[Journal]',
+    
+    # ★ 新增的三本期刊
+    "JNEB": '"Journal of nutrition education and behavior"[Journal]',
+    "AdvNutr": '"Advances in nutrition (Bethesda, Md.)"[Journal]',
+    "MCN": '"Maternal & child nutrition"[Journal]'
 }
 
 def fetch_pubmed_articles(journal_query, count=3):
