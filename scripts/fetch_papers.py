@@ -11,22 +11,14 @@ import google.generativeai as genai
 api_key = os.environ.get("GEMINI_API_KEY")
 genai.configure(api_key=api_key)
 
-# ==========================================
-# ★ 關鍵更新：自動偵測你的金鑰可以使用的模型
-# ==========================================
-target_model = "gemini-1.5-flash" # 預設兜底名稱
+# 自動偵測模型
+target_model = "gemini-1.5-flash"
 try:
     available_models = []
-    # 呼叫 API 取得你帳號所有獲准使用的模型
     for m in genai.list_models():
         if 'generateContent' in m.supported_generation_methods:
             available_models.append(m.name)
-    
-    print("✅ 你的 API 金鑰支援以下模型：")
-    for m_name in available_models:
-        print(f"  - {m_name}")
-        
-    # 自動挑選最適合的免費模型 (優先找 1.5-flash 家族，若無則找 pro)
+            
     for m_name in available_models:
         if '1.5-flash' in m_name:
             target_model = m_name
@@ -36,20 +28,16 @@ try:
             if 'pro' in m_name or 'flash' in m_name:
                 target_model = m_name
                 break
-            
 except Exception as e:
-    print(f"⚠️ 無法獲取模型清單，將嘗試使用預設值。原因: {e}")
+    print(f"無法獲取模型清單，使用預設值。原因: {e}")
 
-print(f"\n🚀 決定使用模型：{target_model}\n")
 model = genai.GenerativeModel(target_model)
-# ==========================================
 
+# 包含新增的三本期刊
 JOURNAL_QUERIES = {
     "AJCN": '"The American journal of clinical nutrition"[Journal]',
     "IJBNPA": '"International journal of behavioral nutrition and physical activity"[Journal]',
     "JPGN": '"Journal of pediatric gastroenterology and nutrition"[Journal]',
-    
-    # ★ 新增的三本期刊
     "JNEB": '"Journal of nutrition education and behavior"[Journal]',
     "AdvNutr": '"Advances in nutrition (Bethesda, Md.)"[Journal]',
     "MCN": '"Maternal & child nutrition"[Journal]'
@@ -98,24 +86,19 @@ def fetch_pubmed_articles(journal_query, count=3):
         
     return articles
 
-def generate_article_analysis(title, summary, link):
+def generate_article_analysis(title, summary):
+    # ★ 關鍵更新：要求 AI 直接輸出 JSON 格式，方便我們做資料拆解
     prompt = f"""
-    你是一位專業的醫學與營養學研究助理。請閱讀以下醫學期刊文章的標題與摘要，並用「繁體中文」輸出指定格式的重點整理。
+    你是一位專業的醫學與營養學研究助理。請閱讀以下醫學期刊文章的標題與摘要。
 
     文章標題: {title}
     文章摘要: {summary}
-    文章連結: {link}
 
-    請輸出以下內容，並嚴格使用 Markdown 格式：
-    
-    ### 重點摘要
-    請用 3 到 4 句話總結這項研究的背景、方法、結果與結論。
-
-    ### 研究縫隙 (Research Gap)
-    請推敲這篇文獻填補了什麼過去研究未知的空白，或是未來還可以進一步研究的限制。
-
-    ### 關鍵字
-    請列出 5 個最重要的關鍵字，格式必須是「繁體中文 (英文)」。
+    請以「繁體中文」進行重點整理，並「嚴格以 JSON 格式」輸出，不要包含任何 Markdown 標記或說明文字。
+    輸出的 JSON 必須包含以下三個欄位：
+    1. "summary": 用 3 到 4 句話總結研究背景、方法、結果與結論。
+    2. "gap": 說明這篇文獻填補了什麼研究空白，或是未來的研究限制。
+    3. "tags": 根據文章內容萃取 3 到 5 個分類標籤（僅限繁體中文，如 "兒童肥胖", "社區介入", "腸胃道疾病", "飲食控制"），請以陣列 (Array) 呈現。
     """
     
     response = model.generate_content(prompt)
@@ -131,7 +114,6 @@ def main():
         
         articles = fetch_pubmed_articles(query, count=3)
         print(f"伺服器回應：找到 {len(articles)} 篇文章\n")
-        
         time.sleep(2)
         
         for article in articles:
@@ -140,32 +122,53 @@ def main():
             link = article['link']
             
             if summary == "無摘要內容" or len(summary) < 20:
-                print(f"跳過無摘要文章: {title[:30]}...")
                 continue
                 
-            print(f"處理中: {title[:50]}... (呼叫 AI 分析...)")
+            print(f"處理中: {title[:50]}... (呼叫 AI 分析並萃取標籤...)")
             
             try:
-                ai_content = generate_article_analysis(title, summary, link)
+                ai_response = generate_article_analysis(title, summary)
                 
-                safe_title = re.sub(r'[\\/*?:"<>|]', "", title)[:50]
+                # ★ 關鍵更新：用正規表達式把 JSON 內容安全地抓出來
+                json_match = re.search(r'\{.*\}', ai_response, re.DOTALL)
+                if not json_match:
+                    raise ValueError("AI 沒有回傳正確的 JSON 格式")
+                
+                data = json.loads(json_match.group(0))
+                
+                # 取得陣列資料並轉成 YAML 的格式
+                tags_list = data.get("tags", ["未分類"])
+                tags_yaml = "[" + ", ".join([f'"{t}"' for t in tags_list]) + "]"
+                
+                # 清除標題中可能導致 YAML 錯誤的雙引號
+                safe_title_frontmatter = title.replace('"', "'")
+                safe_title_file = re.sub(r'[\\/*?:"<>|]', "", title)[:50]
                 date_str = datetime.now().strftime("%Y-%m-%d")
-                filename = f"{output_dir}/{date_str}-{journal_name}-{safe_title}.md"
+                filename = f"{output_dir}/{date_str}-{journal_name}-{safe_title_file}.md"
                 
                 if os.path.exists(filename):
                     print(f"檔案已存在，跳過: {filename}")
                     continue
                 
+                # ★ 關鍵更新：組合最終的 Markdown，把 tags 寫進 Frontmatter
+                markdown_content = f"""---
+title: "{safe_title_frontmatter}"
+journal: "{journal_name}"
+pubDate: "{date_str}"
+link: "{link}"
+tags: {tags_yaml}
+---
+
+### 重點摘要
+{data.get('summary', '無摘要資料')}
+
+### 研究縫隙 (Research Gap)
+{data.get('gap', '無研究縫隙資料')}
+"""
                 with open(filename, "w", encoding="utf-8") as f:
-                    f.write(f"---\n")
-                    f.write(f"title: \"{title}\"\n")
-                    f.write(f"journal: \"{journal_name}\"\n")
-                    f.write(f"pubDate: \"{date_str}\"\n")
-                    f.write(f"link: \"{link}\"\n")
-                    f.write(f"---\n\n")
-                    f.write(ai_content)
+                    f.write(markdown_content)
                 
-                print(f"✅ 成功生成 Markdown 檔案！")
+                print(f"✅ 成功生成並標記標籤！")
                 time.sleep(2)
                 
             except Exception as e:
