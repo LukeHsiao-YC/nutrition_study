@@ -15,6 +15,17 @@ sortedArticles.forEach(article => {
   }
   groupedArticles[monthYear].push(article);
 });
+
+function getCategoryStyle(category) {
+  switch(category) {
+    case '兒童肥胖': return 'background: #feebc8; color: #dd6b20;'; 
+    case '營養衛教介入': return 'background: #c6f6d5; color: #38a169;'; 
+    case '社區營養': return 'background: #e6fffa; color: #319795;'; 
+    case '營養流行病學': return 'background: #faf5ff; color: #805ad5;'; 
+    case '營養評估': return 'background: #ebf8ff; color: #3182ce;'; 
+    default: return 'background: #edf2f7; color: #4a5568;'; 
+  }
+}
 ---
 
 <html lang="zh-TW">
@@ -35,11 +46,18 @@ sortedArticles.forEach(article => {
         <ul style="list-style: none; padding: 0;">
           {groupedArticles[monthYear].map((article) => (
             <li style="margin-bottom: 15px; padding: 15px; background: #f8fafc; border-radius: 6px; border-left: 4px solid #4299e1;">
-              <a href={article.data.link} target="_blank" style="text-decoration: none; color: #2b6cb0; font-weight: bold; font-size: 1.1rem; display: block; margin-bottom: 5px;">
-                {article.data.title}
-              </a>
-              <div style="font-size: 0.85rem; color: #718096; margin-bottom: 8px;">
-                {article.data.journal} | 收錄於 {article.data.pubDate} | 分類：{article.data.category}
+              
+              <div style="margin-bottom: 5px;">
+                <span style={`display: inline-block; font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; font-weight: bold; margin-right: 8px; vertical-align: text-bottom; ${getCategoryStyle(article.data.category)}`}>
+                  {article.data.category}
+                </span>
+                <a href={article.data.link} target="_blank" style="text-decoration: none; color: #2b6cb0; font-weight: bold; font-size: 1.1rem; vertical-align: middle;">
+                  {article.data.title}
+                </a>
+              </div>
+
+              <div style="font-size: 0.85rem; color: #718096; margin-bottom: 8px; margin-top: 8px;">
+                {article.data.journal} | 收錄於 {article.data.pubDate}
               </div>
               <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                 {article.data.tags.map((tag) => (
