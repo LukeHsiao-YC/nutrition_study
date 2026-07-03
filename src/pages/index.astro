@@ -15,6 +15,18 @@ const recentArticles = sortedArticles.filter(article => {
 });
 
 const allTags = [...new Set(allArticles.map((article) => article.data.tags).flat())];
+
+// 定義五大分類的專屬顏色
+function getCategoryStyle(category) {
+  switch(category) {
+    case '兒童肥胖': return 'background: #feebc8; color: #dd6b20;'; // 橘色
+    case '營養衛教介入': return 'background: #c6f6d5; color: #38a169;'; // 綠色
+    case '社區營養': return 'background: #e6fffa; color: #319795;'; // 藍綠色
+    case '營養流行病學': return 'background: #faf5ff; color: #805ad5;'; // 紫色
+    case '營養評估': return 'background: #ebf8ff; color: #3182ce;'; // 藍色
+    default: return 'background: #edf2f7; color: #4a5568;'; // 灰色
+  }
+}
 ---
 
 <html lang="zh-TW">
@@ -29,7 +41,7 @@ const allTags = [...new Set(allArticles.map((article) => article.data.tags).flat
     </div>
 
     <div style="margin-bottom: 30px; margin-top: 20px;">
-      <h3>分類標籤：</h3>
+      <h3>文章標籤過濾：</h3>
       <div style="display: flex; flex-wrap: wrap; gap: 10px;">
         {allTags.map((tag) => (
           <a href={`/tags/${tag}`} style="padding: 5px 12px; background: #f0f4f8; border-radius: 20px; text-decoration: none; color: #2c5282; font-size: 0.9rem;">
@@ -50,7 +62,13 @@ const allTags = [...new Set(allArticles.map((article) => article.data.tags).flat
           <article style="border: 1px solid #ddd; margin-bottom: 30px; padding: 20px; border-radius: 8px; position: relative;">
             
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-              <h2 style="font-size: 1.2rem; margin-bottom: 10px; width: 85%;">{article.data.title}</h2>
+              <h2 style="font-size: 1.2rem; margin-bottom: 10px; width: 85%; line-height: 1.4;">
+                {/* 獨立帶有顏色的分類標籤放在標題最前面 */}
+                <span style={`display: inline-block; font-size: 0.8rem; padding: 4px 10px; border-radius: 6px; font-weight: bold; margin-right: 8px; vertical-align: middle; ${getCategoryStyle(article.data.category)}`}>
+                  {article.data.category}
+                </span>
+                <span style="vertical-align: middle;">{article.data.title}</span>
+              </h2>
               
               <button 
                 class="star-btn" 
@@ -63,9 +81,9 @@ const allTags = [...new Set(allArticles.map((article) => article.data.tags).flat
             </div>
             
             <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-              <span style="font-size: 0.8rem; background: #e2e8f0; padding: 2px 8px; border-radius: 4px; color: #2d3748; font-weight: bold;">{article.data.category}</span>
+              {/* 這裡只保留 AI 萃取的次要標籤 */}
               {article.data.tags.map((tag) => (
-                <span style="font-size: 0.8rem; background: #edf2f7; padding: 2px 8px; border-radius: 4px; color: #4a5568;">{tag}</span>
+                <span style="font-size: 0.8rem; background: #edf2f7; padding: 2px 8px; border-radius: 4px; color: #4a5568;">#{tag}</span>
               ))}
             </div>
 
