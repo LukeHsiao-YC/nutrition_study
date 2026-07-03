@@ -1,0 +1,52 @@
+---
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const allArticles = await getCollection('articles');
+  
+  // 找出所有獨立的標籤
+  const uniqueTags = [...new Set(allArticles.map((article) => article.data.tags).flat())];
+
+  // 幫每個標籤產出專屬的路徑與過濾後的文章資料
+  return uniqueTags.map((tag) => {
+    const filteredArticles = allArticles.filter((article) => 
+      article.data.tags.includes(tag)
+    );
+    
+    return {
+      params: { tag },
+      props: { articles: filteredArticles },
+    };
+  });
+}
+
+const { tag } = Astro.params;
+const { articles } = Astro.props;
+---
+
+<html lang="zh-TW">
+  <head>
+    <meta charset="utf-8" />
+    <title>標籤分類：{tag}</title>
+  </head>
+  <body style="max-width: 800px; margin: 0 auto; padding: 20px; font-family: sans-serif;">
+    <a href="/" style="color: #666; text-decoration: none;">返回首頁</a>
+    <h1>包含標籤「{tag}」的文獻</h1>
+
+    {articles.map(async (article) => {
+      const { Content } = await article.render();
+      return (
+        <article style="border: 1px solid #ddd; margin-bottom: 30px; padding: 20px; border-radius: 8px;">
+          <h2 style="font-size: 1.2rem;">{article.data.title}</h2>
+          <p style="color: #666; font-size: 0.9rem;">
+            期刊名稱：{article.data.journal} | 收錄日期：{article.data.pubDate}
+          </p>
+          <a href={article.data.link} target="_blank" style="color: blue;">前往官方閱讀原文</a>
+          <div style="line-height: 1.6; margin-top: 15px;">
+            <Content />
+          </div>
+        </article>
+      )
+    })}
+  </body>
+</html>
