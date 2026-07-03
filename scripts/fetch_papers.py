@@ -32,31 +32,21 @@ except Exception as e:
 
 model = genai.GenerativeModel(target_model)
 
-# 將期刊改為 Tuple 格式：(PubMed搜尋語法, 分類名稱)
 JOURNAL_QUERIES = {
-    # 1. 兒童肥胖
     "PedObes": ('"Pediatric obesity"[Journal]', "兒童肥胖"),
     "ObesRev": ('"Obesity reviews"[Journal]', "兒童肥胖"),
     "IJO": ('"International journal of obesity"[Journal]', "兒童肥胖"),
-    
-    # 2. 營養衛教介入
     "IJBNPA": ('"International journal of behavioral nutrition and physical activity"[Journal]', "營養衛教介入"),
     "Appetite": ('"Appetite"[Journal]', "營養衛教介入"),
     "JNEB": ('"Journal of nutrition education and behavior"[Journal]', "營養衛教介入"),
     "PEC": ('"Patient education and counseling"[Journal]', "營養衛教介入"),
     "JMIRPed": ('"JMIR pediatrics and parenting"[Journal]', "營養衛教介入"),
-    
-    # 3. 社區營養
     "PHN": ('"Public health nutrition"[Journal]', "社區營養"),
     "AJPM": ('"American journal of preventive medicine"[Journal]', "社區營養"),
     "MCN": ('"Maternal & child nutrition"[Journal]', "社區營養"),
-    
-    # 4. 營養流行病學
     "EJE": ('"European journal of epidemiology"[Journal]', "營養流行病學"),
     "IJE": ('"International journal of epidemiology"[Journal]', "營養流行病學"),
     "AdvNutr": ('"Advances in nutrition (Bethesda, Md.)"[Journal]', "營養流行病學"),
-    
-    # 5. 營養評估
     "ClinNutr": ('"Clinical nutrition (Edinburgh, Scotland)"[Journal]', "營養評估"),
     "AJCN": ('"The American journal of clinical nutrition"[Journal]', "營養評估"),
     "JPEN": ('"JPEN. Journal of parenteral and enteral nutrition"[Journal]', "營養評估"),
@@ -99,7 +89,8 @@ def fetch_pubmed_articles(journal_query, count=3):
             articles.append({
                 "title": title,
                 "summary": summary,
-                "link": link
+                "link": link,
+                "pmid": pmid
             })
     except Exception as e:
         print(f"PubMed 抓取失敗: {e}")
@@ -128,7 +119,6 @@ def main():
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    # 迴圈現在會同時解開查詢語法跟分類名稱
     for journal_name, (query, category) in JOURNAL_QUERIES.items():
         print(f"*** 正在透過 PubMed 搜尋 {journal_name} ({category}) ***")
         
@@ -140,8 +130,22 @@ def main():
             title = article['title']
             summary = article['summary']
             link = article['link']
+            pmid = article['pmid']
             
             if summary == "無摘要內容" or len(summary) < 20:
+                continue
+                
+            date_str = datetime.now().strftime("%Y-%m-%d")
+            
+            # 使用 PMID 當作檔名來防止重複
+            if pmid:
+                filename = f"{output_dir}/{pmid}.md"
+            else:
+                safe_title_file = re.sub(r'[\\/*?:"<>|]', "", title)[:50]
+                filename = f"{output_dir}/{date_str}-{journal_name}-{safe_title_file}.md"
+            
+            if os.path.exists(filename):
+                print(f"檔案已存在，跳過: {pmid or title[:20]}")
                 continue
                 
             print(f"處理中: {title[:50]}... (呼叫 AI 分析並萃取標籤...)")
@@ -159,15 +163,7 @@ def main():
                 tags_yaml = "[" + ", ".join([f'"{t}"' for t in tags_list]) + "]"
                 
                 safe_title_frontmatter = title.replace('"', "'")
-                safe_title_file = re.sub(r'[\\/*?:"<>|]', "", title)[:50]
-                date_str = datetime.now().strftime("%Y-%m-%d")
-                filename = f"{output_dir}/{date_str}-{journal_name}-{safe_title_file}.md"
                 
-                if os.path.exists(filename):
-                    print(f"檔案已存在，跳過: {filename}")
-                    continue
-                
-                # 在這裡將 category 加入到 Markdown 標頭中
                 markdown_content = f"""---
 title: "{safe_title_frontmatter}"
 journal: "{journal_name}"
