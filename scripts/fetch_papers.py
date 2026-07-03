@@ -4,14 +4,13 @@ import json
 import xml.etree.ElementTree as ET
 import os
 import re
+import time  # ★ 新增：用來控制程式的執行速度
 from datetime import datetime
 from google import genai
 
-# 讀取 Gemini 金鑰
 api_key = os.environ.get("GEMINI_API_KEY")
 client = genai.Client(api_key=api_key)
 
-# 改用 PubMed 的期刊標準全名進行精準搜尋
 JOURNAL_QUERIES = {
     "AJCN": '"The American journal of clinical nutrition"[Journal]',
     "IJBNPA": '"International journal of behavioral nutrition and physical activity"[Journal]',
@@ -19,14 +18,11 @@ JOURNAL_QUERIES = {
 }
 
 def fetch_pubmed_articles(journal_query, count=3):
-    """透過 PubMed 官方 API 取得最新文獻標題與摘要"""
     articles = []
     try:
-        # 第一步：搜尋最新文獻的 PMID
         encoded_query = urllib.parse.quote(journal_query)
         search_url = f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term={encoded_query}&retmode=json&retmax={count}&sort=date"
         
-        # 為了避免偶爾的網路波動，加入 User-Agent
         req = urllib.request.Request(search_url, headers={'User-Agent': 'Mozilla/5.0'})
         with urllib.request.urlopen(req) as response:
             search_data = json.loads(response.read().decode())
@@ -35,7 +31,6 @@ def fetch_pubmed_articles(journal_query, count=3):
         if not id_list:
             return articles
             
-        # 第二步：根據抓到的 PMID，去把完整的摘要抓回來
         ids_str = ",".join(id_list)
         fetch_url = f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id={ids_str}&retmode=xml"
         
@@ -43,18 +38,14 @@ def fetch_pubmed_articles(journal_query, count=3):
         with urllib.request.urlopen(req_fetch) as response:
             xml_data = response.read()
         
-        # 解析 XML 資料
         root = ET.fromstring(xml_data)
         for article in root.findall('.//PubmedArticle'):
-            # 取得標題
             title_elem = article.find('.//ArticleTitle')
             title = title_elem.text if title_elem is not None else "無標題"
             
-            # 取得摘要 (PubMed 摘要有時會分段，需合併)
             abstract_texts = article.findall('.//AbstractText')
             summary = " ".join([elem.text for elem in abstract_texts if elem.text]) if abstract_texts else "無摘要內容"
             
-            # 取得 PMID 並組合成網址
             pmid_elem = article.find('.//PMID')
             pmid = pmid_elem.text if pmid_elem is not None else ""
             link = f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/" if pmid else ""
@@ -89,8 +80,9 @@ def generate_article_analysis(title, summary, link):
     請列出 5 個最重要的關鍵字，格式必須是「繁體中文 (英文)」。
     """
     
+    # ★ 更新：改用 gemini-2.0-flash，完美契合新版 SDK
     response = client.models.generate_content(
-        model='gemini-1.5-flash',
+        model='gemini-2.0-flash',
         contents=prompt
     )
     return response.text
@@ -103,9 +95,11 @@ def main():
     for journal_name, query in JOURNAL_QUERIES.items():
         print(f"--- 正在透過 PubMed 搜尋 {journal_name} ---")
         
-        # 呼叫自訂的 PubMed 抓取函式
         articles = fetch_pubmed_articles(query, count=3)
         print(f"伺服器回應：找到 {len(articles)} 篇文章\n")
+        
+        # ★ 新增：每次與 PubMed 溝通完，強制休息 2 秒，避免被封鎖 429
+        time.sleep(2)
         
         for article in articles:
             title = article['title']
@@ -121,7 +115,6 @@ def main():
             try:
                 ai_content = generate_article_analysis(title, summary, link)
                 
-                # 清理檔名
                 safe_title = re.sub(r'[\\/*?:"<>|]', "", title)[:50]
                 date_str = datetime.now().strftime("%Y-%m-%d")
                 filename = f"{output_dir}/{date_str}-{journal_name}-{safe_title}.md"
@@ -140,6 +133,9 @@ def main():
                     f.write(ai_content)
                 
                 print(f"✅ 成功生成 Markdown 檔案！")
+                
+                # ★ 新增：每次呼叫完 AI，也休息 2 秒，確保 API 穩定
+                time.sleep(2)
                 
             except Exception as e:
                 print(f"❌ 處理時發生錯誤，原因: {str(e)}")
