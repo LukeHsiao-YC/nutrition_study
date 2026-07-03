@@ -8,12 +8,41 @@ import time
 from datetime import datetime
 import google.generativeai as genai
 
-# 讀取金鑰並設定舊版、最穩定的 SDK
 api_key = os.environ.get("GEMINI_API_KEY")
 genai.configure(api_key=api_key)
 
-# 使用免費額度最充足的 1.5 Flash 模型
-model = genai.GenerativeModel('gemini-1.5-flash')
+# ==========================================
+# ★ 關鍵更新：自動偵測你的金鑰可以使用的模型
+# ==========================================
+target_model = "gemini-1.5-flash" # 預設兜底名稱
+try:
+    available_models = []
+    # 呼叫 API 取得你帳號所有獲准使用的模型
+    for m in genai.list_models():
+        if 'generateContent' in m.supported_generation_methods:
+            available_models.append(m.name)
+    
+    print("✅ 你的 API 金鑰支援以下模型：")
+    for m_name in available_models:
+        print(f"  - {m_name}")
+        
+    # 自動挑選最適合的免費模型 (優先找 1.5-flash 家族，若無則找 pro)
+    for m_name in available_models:
+        if '1.5-flash' in m_name:
+            target_model = m_name
+            break
+    else:
+        for m_name in available_models:
+            if 'pro' in m_name or 'flash' in m_name:
+                target_model = m_name
+                break
+            
+except Exception as e:
+    print(f"⚠️ 無法獲取模型清單，將嘗試使用預設值。原因: {e}")
+
+print(f"\n🚀 決定使用模型：{target_model}\n")
+model = genai.GenerativeModel(target_model)
+# ==========================================
 
 JOURNAL_QUERIES = {
     "AJCN": '"The American journal of clinical nutrition"[Journal]',
@@ -132,7 +161,6 @@ def main():
                     f.write(ai_content)
                 
                 print(f"✅ 成功生成 Markdown 檔案！")
-                
                 time.sleep(2)
                 
             except Exception as e:
