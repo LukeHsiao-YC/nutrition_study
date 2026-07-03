@@ -32,23 +32,35 @@ except Exception as e:
 
 model = genai.GenerativeModel(target_model)
 
+# 將期刊改為 Tuple 格式：(PubMed搜尋語法, 分類名稱)
 JOURNAL_QUERIES = {
-    "AJCN": '"The American journal of clinical nutrition"[Journal]',
-    "IJBNPA": '"International journal of behavioral nutrition and physical activity"[Journal]',
-    "JPGN": '"Journal of pediatric gastroenterology and nutrition"[Journal]',
-    "JNEB": '"Journal of nutrition education and behavior"[Journal]',
-    "AdvNutr": '"Advances in nutrition (Bethesda, Md.)"[Journal]',
-    "MCN": '"Maternal & child nutrition"[Journal]',
-    "ClinNutr": '"Clinical nutrition (Edinburgh, Scotland)"[Journal]',
-    "PedObes": '"Pediatric obesity"[Journal]',
-    "PHN": '"Public health nutrition"[Journal]',
-    "AJPM": '"American journal of preventive medicine"[Journal]',
-    "Appetite": '"Appetite"[Journal]',
-    "PEC": '"Patient education and counseling"[Journal]',
-    "ObesRev": '"Obesity reviews"[Journal]',
-    "IJO": '"International journal of obesity"[Journal]',
-    "EJE": '"European journal of epidemiology"[Journal]',
-    "IJE": '"International journal of epidemiology"[Journal]'
+    # 1. 兒童肥胖
+    "PedObes": ('"Pediatric obesity"[Journal]', "兒童肥胖"),
+    "ObesRev": ('"Obesity reviews"[Journal]', "兒童肥胖"),
+    "IJO": ('"International journal of obesity"[Journal]', "兒童肥胖"),
+    
+    # 2. 營養衛教介入
+    "IJBNPA": ('"International journal of behavioral nutrition and physical activity"[Journal]', "營養衛教介入"),
+    "Appetite": ('"Appetite"[Journal]', "營養衛教介入"),
+    "JNEB": ('"Journal of nutrition education and behavior"[Journal]', "營養衛教介入"),
+    "PEC": ('"Patient education and counseling"[Journal]', "營養衛教介入"),
+    "JMIRPed": ('"JMIR pediatrics and parenting"[Journal]', "營養衛教介入"),
+    
+    # 3. 社區營養
+    "PHN": ('"Public health nutrition"[Journal]', "社區營養"),
+    "AJPM": ('"American journal of preventive medicine"[Journal]', "社區營養"),
+    "MCN": ('"Maternal & child nutrition"[Journal]', "社區營養"),
+    
+    # 4. 營養流行病學
+    "EJE": ('"European journal of epidemiology"[Journal]', "營養流行病學"),
+    "IJE": ('"International journal of epidemiology"[Journal]', "營養流行病學"),
+    "AdvNutr": ('"Advances in nutrition (Bethesda, Md.)"[Journal]', "營養流行病學"),
+    
+    # 5. 營養評估
+    "ClinNutr": ('"Clinical nutrition (Edinburgh, Scotland)"[Journal]', "營養評估"),
+    "AJCN": ('"The American journal of clinical nutrition"[Journal]', "營養評估"),
+    "JPEN": ('"JPEN. Journal of parenteral and enteral nutrition"[Journal]', "營養評估"),
+    "JPGN": ('"Journal of pediatric gastroenterology and nutrition"[Journal]', "營養評估")
 }
 
 def fetch_pubmed_articles(journal_query, count=3):
@@ -116,8 +128,9 @@ def main():
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    for journal_name, query in JOURNAL_QUERIES.items():
-        print(f"*** 正在透過 PubMed 搜尋 {journal_name} ***")
+    # 迴圈現在會同時解開查詢語法跟分類名稱
+    for journal_name, (query, category) in JOURNAL_QUERIES.items():
+        print(f"*** 正在透過 PubMed 搜尋 {journal_name} ({category}) ***")
         
         articles = fetch_pubmed_articles(query, count=3)
         print(f"伺服器回應：找到 {len(articles)} 篇文章\n")
@@ -154,9 +167,11 @@ def main():
                     print(f"檔案已存在，跳過: {filename}")
                     continue
                 
+                # 在這裡將 category 加入到 Markdown 標頭中
                 markdown_content = f"""---
 title: "{safe_title_frontmatter}"
 journal: "{journal_name}"
+category: "{category}"
 pubDate: "{date_str}"
 link: "{link}"
 tags: {tags_yaml}
