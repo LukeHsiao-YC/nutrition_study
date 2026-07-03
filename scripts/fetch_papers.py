@@ -124,7 +124,7 @@ def main():
         
         articles = fetch_pubmed_articles(query, count=3)
         print(f"伺服器回應：找到 {len(articles)} 篇文章\n")
-        time.sleep(2)
+        time.sleep(5)
         
         for article in articles:
             title = article['title']
