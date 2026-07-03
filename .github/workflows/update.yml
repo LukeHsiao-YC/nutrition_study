@@ -21,7 +21,7 @@ jobs:
           python-version: '3.11'
 
       - name: 安裝所需套件
-        run: pip install feedparser google-genai
+        run: pip install feedparser google-generativeai
 
       - name: 執行 AI 抓取腳本
         env:
