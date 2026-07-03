@@ -1,14 +1,12 @@
 import feedparser
-import google.generativeai as genai
-from google.colab import userdata  # 導入 Colab 讀取金鑰的工具
 import os
 import re
 from datetime import datetime
+from google import genai # 更新為最新的 Google SDK
 
-# 從 Colab Secrets 安全取得金鑰
-api_key = userdata.get('GEMINI_API_KEY')
-genai.configure(api_key=api_key)
-model = genai.GenerativeModel('gemini-1.5-flash')
+# 改回使用 os.environ 來讀取 GitHub Actions 傳入的金鑰
+api_key = os.environ.get("GEMINI_API_KEY")
+client = genai.Client(api_key=api_key)
 
 JOURNAL_FEEDS = {
     "AJCN": "https://ajcn.nutrition.org/rss", 
@@ -19,35 +17,75 @@ JOURNAL_FEEDS = {
 def generate_article_analysis(title, summary, link):
     prompt = f"""
     你是一位專業的醫學與營養學研究助理。請閱讀以下醫學期刊文章的標題與摘要，並用「繁體中文」輸出指定格式的重點整理。
+
     文章標題: {title}
     文章摘要: {summary}
     文章連結: {link}
 
     請輸出以下內容，並嚴格使用 Markdown 格式：
+    
     ### 重點摘要
     請用 3 到 4 句話總結這項研究的背景、方法、結果與結論。
+
     ### 研究縫隙 (Research Gap)
     請推敲這篇文獻填補了什麼過去研究未知的空白，或是未來還可以進一步研究的限制。
+
     ### 關鍵字
     請列出 5 個最重要的關鍵字，格式必須是「繁體中文 (英文)」。
     """
-    response = model.generate_content(prompt)
+    
+    # 使用新版 SDK 的呼叫方式
+    response = client.models.generate_content(
+        model='gemini-1.5-flash',
+        contents=prompt
+    )
     return response.text
 
-# 開始抓取與測試
-for journal_name, feed_url in JOURNAL_FEEDS.items():
-    print(f"--- 正在抓取 {journal_name} ---")
-    feed = feedparser.parse(feed_url)
-    
-    # 在 Colab 先測試最新的 1 篇就好
-    for entry in feed.entries[:1]:
-        title = entry.title
-        link = entry.link
-        summary = entry.get("summary", entry.get("description", "無摘要內容"))
+def main():
+    output_dir = "src/content/articles"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    for journal_name, feed_url in JOURNAL_FEEDS.items():
+        print(f"正在抓取 {journal_name} 的最新文章...")
+        feed = feedparser.parse(feed_url)
         
-        if summary == "無摘要內容" or len(summary) < 20:
-            continue
+        for entry in feed.entries[:3]:
+            title = entry.title
+            link = entry.link
             
-        print(f"最新文章標題: {title}")
-        ai_content = generate_article_analysis(title, summary, link)
-        print(ai_content)
+            summary = entry.get("summary", entry.get("description", "無摘要內容"))
+            
+            if summary == "無摘要內容" or len(summary) < 20:
+                print(f"跳過無摘要文章: {title}")
+                continue
+                
+            print(f"處理中: {title}")
+            
+            try:
+                ai_content = generate_article_analysis(title, summary, link)
+                
+                safe_title = re.sub(r'[\\/*?:"<>|]', "", title)[:50]
+                date_str = datetime.now().strftime("%Y-%m-%d")
+                filename = f"{output_dir}/{date_str}-{journal_name}-{safe_title}.md"
+                
+                if os.path.exists(filename):
+                    print(f"檔案已存在，跳過: {filename}")
+                    continue
+                
+                with open(filename, "w", encoding="utf-8") as f:
+                    f.write(f"---\n")
+                    f.write(f"title: \"{title}\"\n")
+                    f.write(f"journal: \"{journal_name}\"\n")
+                    f.write(f"pubDate: \"{date_str}\"\n")
+                    f.write(f"link: \"{link}\"\n")
+                    f.write(f"---\n\n")
+                    f.write(ai_content)
+                
+                print(f"成功生成: {filename}")
+                
+            except Exception as e:
+                print(f"處理時發生錯誤: {title}，原因: {str(e)}")
+
+if __name__ == "__main__":
+    main()
