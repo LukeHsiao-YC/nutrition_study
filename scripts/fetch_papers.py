@@ -2,9 +2,11 @@ import feedparser
 import os
 import re
 from datetime import datetime
-from google import genai # 更新為最新的 Google SDK
+from google import genai
 
-# 改回使用 os.environ 來讀取 GitHub Actions 傳入的金鑰
+# ★ 關鍵更新：偽裝成一般 Chrome 瀏覽器，避免被醫學期刊的防火牆阻擋
+feedparser.USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+
 api_key = os.environ.get("GEMINI_API_KEY")
 client = genai.Client(api_key=api_key)
 
@@ -34,7 +36,6 @@ def generate_article_analysis(title, summary, link):
     請列出 5 個最重要的關鍵字，格式必須是「繁體中文 (英文)」。
     """
     
-    # 使用新版 SDK 的呼叫方式
     response = client.models.generate_content(
         model='gemini-1.5-flash',
         contents=prompt
@@ -47,8 +48,16 @@ def main():
         os.makedirs(output_dir)
 
     for journal_name, feed_url in JOURNAL_FEEDS.items():
-        print(f"正在抓取 {journal_name} 的最新文章...")
+        print(f"--- 正在嘗試抓取 {journal_name} ---")
         feed = feedparser.parse(feed_url)
+        
+        # ★ 新增檢查機制：印出到底抓到幾篇，若被擋下會跳出警告
+        entries_count = len(feed.entries)
+        print(f"伺服器回應：找到 {entries_count} 篇文章")
+        
+        if entries_count == 0:
+            print(f"⚠️ 警告：無法從 {journal_name} 獲取資料，可能是防火牆阻擋或網址失效。\n")
+            continue
         
         for entry in feed.entries[:3]:
             title = entry.title
@@ -60,7 +69,7 @@ def main():
                 print(f"跳過無摘要文章: {title}")
                 continue
                 
-            print(f"處理中: {title}")
+            print(f"處理中: {title} (呼叫 AI 分析...)")
             
             try:
                 ai_content = generate_article_analysis(title, summary, link)
@@ -82,10 +91,11 @@ def main():
                     f.write(f"---\n\n")
                     f.write(ai_content)
                 
-                print(f"成功生成: {filename}")
+                print(f"✅ 成功生成: {filename}")
                 
             except Exception as e:
-                print(f"處理時發生錯誤: {title}，原因: {str(e)}")
+                print(f"❌ 處理時發生錯誤: {title}，原因: {str(e)}")
+        print("\n") # 換行讓版面乾淨一點
 
 if __name__ == "__main__":
     main()
