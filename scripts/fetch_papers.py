@@ -4,12 +4,16 @@ import json
 import xml.etree.ElementTree as ET
 import os
 import re
-import time  # ★ 新增：用來控制程式的執行速度
+import time
 from datetime import datetime
-from google import genai
+import google.generativeai as genai
 
+# 讀取金鑰並設定舊版、最穩定的 SDK
 api_key = os.environ.get("GEMINI_API_KEY")
-client = genai.Client(api_key=api_key)
+genai.configure(api_key=api_key)
+
+# 使用免費額度最充足的 1.5 Flash 模型
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 JOURNAL_QUERIES = {
     "AJCN": '"The American journal of clinical nutrition"[Journal]',
@@ -80,11 +84,7 @@ def generate_article_analysis(title, summary, link):
     請列出 5 個最重要的關鍵字，格式必須是「繁體中文 (英文)」。
     """
     
-    # ★ 更新：改用 gemini-2.0-flash，完美契合新版 SDK
-    response = client.models.generate_content(
-        model='gemini-2.0-flash',
-        contents=prompt
-    )
+    response = model.generate_content(prompt)
     return response.text
 
 def main():
@@ -93,12 +93,11 @@ def main():
         os.makedirs(output_dir)
 
     for journal_name, query in JOURNAL_QUERIES.items():
-        print(f"--- 正在透過 PubMed 搜尋 {journal_name} ---")
+        print(f"*** 正在透過 PubMed 搜尋 {journal_name} ***")
         
         articles = fetch_pubmed_articles(query, count=3)
         print(f"伺服器回應：找到 {len(articles)} 篇文章\n")
         
-        # ★ 新增：每次與 PubMed 溝通完，強制休息 2 秒，避免被封鎖 429
         time.sleep(2)
         
         for article in articles:
@@ -134,12 +133,11 @@ def main():
                 
                 print(f"✅ 成功生成 Markdown 檔案！")
                 
-                # ★ 新增：每次呼叫完 AI，也休息 2 秒，確保 API 穩定
                 time.sleep(2)
                 
             except Exception as e:
                 print(f"❌ 處理時發生錯誤，原因: {str(e)}")
-        print("-" * 40)
+        print("*" * 40)
 
 if __name__ == "__main__":
     main()
