@@ -1,0 +1,55 @@
+---
+import { getCollection } from 'astro:content';
+const allArticles = await getCollection('articles');
+
+const sortedArticles = allArticles.sort((a, b) =>
+  new Date(b.data.pubDate).valueOf() - new Date(a.data.pubDate).valueOf()
+);
+
+// 把所有文章裡的標籤收集起來並去除重複項目
+const allTags = [...new Set(allArticles.map((article) => article.data.tags).flat())];
+---
+
+<html lang="zh-TW">
+  <head>
+    <meta charset="utf-8" />
+    <title>最新營養與兒童醫學文獻</title>
+  </head>
+  <body style="max-width: 800px; margin: 0 auto; padding: 20px; font-family: sans-serif;">
+    <h1>最新文獻速報</h1>
+
+    <div style="margin-bottom: 30px;">
+      <h3>分類標籤：</h3>
+      <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+        {allTags.map((tag) => (
+          <a href={`/tags/${tag}`} style="padding: 5px 12px; background: #f0f4f8; border-radius: 20px; text-decoration: none; color: #2c5282; font-size: 0.9rem;">
+            #{tag}
+          </a>
+        ))}
+      </div>
+    </div>
+
+    {sortedArticles.map(async (article) => {
+      const { Content } = await article.render();
+      return (
+        <article style="border: 1px solid #ddd; margin-bottom: 30px; padding: 20px; border-radius: 8px;">
+          <h2 style="font-size: 1.2rem; margin-bottom: 10px;">{article.data.title}</h2>
+          
+          <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+            {article.data.tags.map((tag) => (
+              <span style="font-size: 0.8rem; background: #edf2f7; padding: 2px 8px; border-radius: 4px; color: #4a5568;">{tag}</span>
+            ))}
+          </div>
+
+          <p style="color: #666; font-size: 0.9rem;">
+            期刊名稱：{article.data.journal} | 收錄日期：{article.data.pubDate}
+          </p>
+          <a href={article.data.link} target="_blank" style="color: blue;">前往官方閱讀原文</a>
+          <div style="line-height: 1.6; margin-top: 15px;">
+            <Content />
+          </div>
+        </article>
+      )
+    })}
+  </body>
+</html>
