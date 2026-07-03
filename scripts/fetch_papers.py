@@ -151,12 +151,27 @@ def main():
                     continue
                 
                 # ★ 關鍵更新：組合最終的 Markdown，把 tags 寫進 Frontmatter
+               # ★ 關鍵更新：加入英文原文區塊
                 markdown_content = f"""---
 title: "{safe_title_frontmatter}"
 journal: "{journal_name}"
 pubDate: "{date_str}"
 link: "{link}"
 tags: {tags_yaml}
+---
+
+### 重點摘要
+{data.get('summary', '無摘要資料')}
+
+### 研究縫隙 (Research Gap)
+{data.get('gap', '無研究縫隙資料')}
+
+### 原文資訊 (Original English)
+**Title:** {title}
+**Abstract:** {summary}
+"""
+                with open(filename, "w", encoding="utf-8") as f:
+                    f.write(markdown_content)
 ---
 
 ### 重點摘要
