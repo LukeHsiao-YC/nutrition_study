@@ -16,15 +16,14 @@ const recentArticles = sortedArticles.filter(article => {
 
 const allTags = [...new Set(allArticles.map((article) => article.data.tags).flat())];
 
-// 定義五大分類的專屬顏色
 function getCategoryStyle(category) {
   switch(category) {
-    case '兒童肥胖': return 'background: #feebc8; color: #dd6b20;'; // 橘色
-    case '營養衛教介入': return 'background: #c6f6d5; color: #38a169;'; // 綠色
-    case '社區營養': return 'background: #e6fffa; color: #319795;'; // 藍綠色
-    case '營養流行病學': return 'background: #faf5ff; color: #805ad5;'; // 紫色
-    case '營養評估': return 'background: #ebf8ff; color: #3182ce;'; // 藍色
-    default: return 'background: #edf2f7; color: #4a5568;'; // 灰色
+    case '兒童肥胖': return 'background: #feebc8; color: #dd6b20;'; 
+    case '營養衛教介入': return 'background: #c6f6d5; color: #38a169;'; 
+    case '社區營養': return 'background: #e6fffa; color: #319795;'; 
+    case '營養流行病學': return 'background: #faf5ff; color: #805ad5;'; 
+    case '營養評估': return 'background: #ebf8ff; color: #3182ce;'; 
+    default: return 'background: #edf2f7; color: #4a5568;'; 
   }
 }
 ---
@@ -32,16 +31,31 @@ function getCategoryStyle(category) {
 <html lang="zh-TW">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>最新營養與兒童醫學文獻</title>
+    <script is:inline>
+      // 網頁一載入就馬上讀取先前的字體設定，避免畫面字體突然變大變小
+      const savedSize = localStorage.getItem('base-font-size') || '16';
+      document.documentElement.style.fontSize = savedSize + 'px';
+    </script>
   </head>
   <body style="max-width: 800px; margin: 0 auto; padding: 20px; font-family: sans-serif;">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-      <h1>最新文獻速報 (近七日)</h1>
-      <a href="/archive" style="padding: 8px 16px; background: #2c5282; color: white; text-decoration: none; border-radius: 4px;">📂 歷史文獻庫</a>
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+      <h1 style="margin: 0;">最新文獻速報 (近七日)</h1>
+      
+      <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+        <div style="background: #edf2f7; padding: 4px 8px; border-radius: 6px; display: flex; gap: 5px; align-items: center;">
+          <span style="font-size: 0.85rem; color: #4a5568; margin-right: 4px;">字體</span>
+          <button id="font-decrease" style="border: 1px solid #cbd5e0; background: white; padding: 4px 10px; border-radius: 4px; cursor: pointer; color: #2d3748;">A-</button>
+          <button id="font-reset" style="border: 1px solid #cbd5e0; background: white; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; color: #2d3748;">預設</button>
+          <button id="font-increase" style="border: 1px solid #cbd5e0; background: white; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; color: #2d3748;">A+</button>
+        </div>
+        <a href="/archive" style="padding: 8px 16px; background: #2c5282; color: white; text-decoration: none; border-radius: 4px; white-space: nowrap;">📂 歷史文獻庫</a>
+      </div>
     </div>
 
-    <div style="margin-bottom: 30px; margin-top: 20px;">
-      <h3>文章標籤過濾：</h3>
+    <div style="margin-bottom: 30px; margin-top: 25px;">
+      <h3 style="margin-bottom: 10px;">文章標籤過濾：</h3>
       <div style="display: flex; flex-wrap: wrap; gap: 10px;">
         {allTags.map((tag) => (
           <a href={`/tags/${tag}`} style="padding: 5px 12px; background: #f0f4f8; border-radius: 20px; text-decoration: none; color: #2c5282; font-size: 0.9rem;">
@@ -63,7 +77,6 @@ function getCategoryStyle(category) {
             
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
               <h2 style="font-size: 1.2rem; margin-bottom: 10px; width: 85%; line-height: 1.4;">
-                {/* 獨立帶有顏色的分類標籤放在標題最前面 */}
                 <span style={`display: inline-block; font-size: 0.8rem; padding: 4px 10px; border-radius: 6px; font-weight: bold; margin-right: 8px; vertical-align: middle; ${getCategoryStyle(article.data.category)}`}>
                   {article.data.category}
                 </span>
@@ -80,8 +93,7 @@ function getCategoryStyle(category) {
               </button>
             </div>
             
-            <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-              {/* 這裡只保留 AI 萃取的次要標籤 */}
+            <div style="display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
               {article.data.tags.map((tag) => (
                 <span style="font-size: 0.8rem; background: #edf2f7; padding: 2px 8px; border-radius: 4px; color: #4a5568;">#{tag}</span>
               ))}
@@ -91,19 +103,19 @@ function getCategoryStyle(category) {
               期刊名稱：{article.data.journal} | 收錄日期：{article.data.pubDate}
             </p>
             
-            <div style="margin-top: 10px; margin-bottom: 15px;">
-              <a href={article.data.link} target="_blank" style="color: blue; text-decoration: none; margin-right: 15px;">🔗 閱讀原文</a>
+            <div style="margin-top: 10px; margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 10px;">
+              <a href={article.data.link} target="_blank" style="color: blue; text-decoration: none; display: flex; align-items: center;">🔗 閱讀原文</a>
               
               <button 
                 class="copy-btn"
                 data-content={`【${article.data.title}】\n\n${article.body}`}
-                style="background: #2b6cb0; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85rem;"
+                style="background: #2b6cb0; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem;"
               >
                 📝 複製給 NotebookLM
               </button>
             </div>
 
-            <div style="line-height: 1.6; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
+            <div class="article-content" style="line-height: 1.6; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
               <Content />
             </div>
           </article>
@@ -112,6 +124,7 @@ function getCategoryStyle(category) {
     )}
 
     <script>
+      // 處理星號點擊與記憶
       document.querySelectorAll('.star-btn').forEach(btn => {
         const id = btn.getAttribute('data-id');
         if (localStorage.getItem('star-' + id)) {
@@ -129,6 +142,7 @@ function getCategoryStyle(category) {
         });
       });
 
+      // 處理複製到 NotebookLM
       document.querySelectorAll('.copy-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
           const content = e.target.getAttribute('data-content');
@@ -143,6 +157,32 @@ function getCategoryStyle(category) {
             }, 3000);
           });
         });
+      });
+
+      // 處理字體放大縮小
+      const htmlRoot = document.documentElement;
+      let currentSize = parseInt(localStorage.getItem('base-font-size')) || 16;
+
+      document.getElementById('font-increase').addEventListener('click', () => {
+        if (currentSize < 24) {
+          currentSize += 2;
+          htmlRoot.style.fontSize = currentSize + 'px';
+          localStorage.setItem('base-font-size', currentSize);
+        }
+      });
+
+      document.getElementById('font-decrease').addEventListener('click', () => {
+        if (currentSize > 12) {
+          currentSize -= 2;
+          htmlRoot.style.fontSize = currentSize + 'px';
+          localStorage.setItem('base-font-size', currentSize);
+        }
+      });
+
+      document.getElementById('font-reset').addEventListener('click', () => {
+        currentSize = 16;
+        htmlRoot.style.fontSize = '16px';
+        localStorage.setItem('base-font-size', '16');
       });
     </script>
   </body>
