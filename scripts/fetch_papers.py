@@ -8,6 +8,7 @@ import time
 from datetime import datetime
 import google.generativeai as genai
 
+# 使用環境變數讀取 GitHub Secrets 的金鑰
 api_key = os.environ.get("GEMINI_API_KEY")
 genai.configure(api_key=api_key)
 
@@ -124,7 +125,7 @@ def main():
         
         articles = fetch_pubmed_articles(query, count=3)
         print(f"伺服器回應：找到 {len(articles)} 篇文章\n")
-        time.sleep(5)
+        time.sleep(2)
         
         for article in articles:
             title = article['title']
@@ -137,7 +138,6 @@ def main():
                 
             date_str = datetime.now().strftime("%Y-%m-%d")
             
-            # 使用 PMID 當作檔名來防止重複
             if pmid:
                 filename = f"{output_dir}/{pmid}.md"
             else:
