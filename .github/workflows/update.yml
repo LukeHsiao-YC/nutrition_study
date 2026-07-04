@@ -28,9 +28,9 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python scripts/fetch_papers.py
 
-      - name: 把新產生的 Markdown 存回 GitHub
+      - name: 提交並推播變更
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add .
-          git diff --quiet && git diff --staged --quiet || (git commit -m "自動新增最新期刊重點整理" && git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "自動新增最新期刊重點整理" && git pull --rebase origin main && git push)
