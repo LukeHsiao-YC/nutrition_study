@@ -31,43 +31,121 @@ function getCategoryStyle(category) {
 <html lang="zh-TW">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>歷史文獻庫</title>
   </head>
   <body style="max-width: 800px; margin: 0 auto; padding: 20px; font-family: sans-serif;">
-    <div style="margin-bottom: 30px;">
-      <a href="/" style="color: #666; text-decoration: none;">返回首頁</a>
-      <h1 style="margin-top: 10px;">歷史文獻庫</h1>
-      <p style="color: #666;">這裡收錄了所有過去抓取過的醫學與營養期刊文獻，按月份分類整理。</p>
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px; margin-bottom: 30px;">
+      <div>
+        <a href="/" style="color: #666; text-decoration: none;">← 返回首頁</a>
+        <h1 style="margin-top: 10px; margin-bottom: 5px;">歷史文獻庫</h1>
+        <p style="color: #666; margin-top: 0;">這裡收錄了所有過去抓取過的醫學與營養期刊文獻。</p>
+      </div>
+      
+      <button id="filter-starred" style="padding: 6px 12px; background: #fff3c4; border: 1px solid #ecc94b; color: #b7791f; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: bold;">
+        ⭐ 只看星號收藏
+      </button>
     </div>
 
     {Object.keys(groupedArticles).map((monthYear) => (
-      <div style="margin-bottom: 40px;">
+      <div class="month-group" style="margin-bottom: 40px;">
         <h2 style="border-bottom: 2px solid #2c5282; padding-bottom: 5px; color: #2c5282;">{monthYear}</h2>
         <ul style="list-style: none; padding: 0;">
-          {groupedArticles[monthYear].map((article) => (
-            <li style="margin-bottom: 15px; padding: 15px; background: #f8fafc; border-radius: 6px; border-left: 4px solid #4299e1;">
-              
-              <div style="margin-bottom: 5px;">
-                <span style={`display: inline-block; font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; font-weight: bold; margin-right: 8px; vertical-align: text-bottom; ${getCategoryStyle(article.data.category)}`}>
-                  {article.data.category}
-                </span>
-                <a href={article.data.link} target="_blank" style="text-decoration: none; color: #2b6cb0; font-weight: bold; font-size: 1.1rem; vertical-align: middle;">
-                  {article.data.title}
-                </a>
-              </div>
+          {groupedArticles[monthYear].map((article) => {
+            const articleId = article.data.title.replace(/\s+/g, '-').slice(0, 30);
+            return (
+              <li class="archive-item" style="margin-bottom: 15px; padding: 15px; background: #f8fafc; border-radius: 6px; border-left: 4px solid #4299e1; position: relative;">
+                
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                  <div style="margin-bottom: 5px; width: 90%;">
+                    <span style={`display: inline-block; font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; font-weight: bold; margin-right: 8px; vertical-align: text-bottom; ${getCategoryStyle(article.data.category)}`}>
+                      {article.data.category}
+                    </span>
+                    <a href={article.data.link} target="_blank" style="text-decoration: none; color: #2b6cb0; font-weight: bold; font-size: 1.1rem; vertical-align: middle;">
+                      {article.data.title}
+                    </a>
+                  </div>
 
-              <div style="font-size: 0.85rem; color: #718096; margin-bottom: 8px; margin-top: 8px;">
-                {article.data.journal} | 收錄於 {article.data.pubDate}
-              </div>
-              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                {article.data.tags.map((tag) => (
-                  <a href={`/tags/${tag}`} style="font-size: 0.75rem; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; color: #4a5568; text-decoration: none;">#{tag}</a>
-                ))}
-              </div>
-            </li>
-          ))}
+                  <button 
+                    class="star-btn" 
+                    data-id={articleId}
+                    style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: #ccc; padding: 0;"
+                    title="標記為重要"
+                  >
+                    ★
+                  </button>
+                </div>
+
+                <div style="font-size: 0.85rem; color: #718096; margin-bottom: 8px; margin-top: 8px;">
+                  {article.data.journal} | 收錄於 {article.data.pubDate}
+                </div>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                  {article.data.tags.map((tag) => (
+                    <a href={`/tags/${tag}`} style="font-size: 0.75rem; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; color: #4a5568; text-decoration: none;">#{tag}</a>
+                  ))}
+                </div>
+              </li>
+            );
+          })}
         </ul>
       </div>
     ))}
+
+    <script>
+      // 處理星號點擊與狀態綁定
+      document.querySelectorAll('.star-btn').forEach(btn => {
+        const id = btn.getAttribute('data-id');
+        if (localStorage.getItem('star-' + id)) {
+          btn.style.color = '#ecc94b';
+          btn.classList.add('is-starred');
+        }
+
+        btn.addEventListener('click', () => {
+          if (localStorage.getItem('star-' + id)) {
+            localStorage.removeItem('star-' + id);
+            btn.style.color = '#ccc';
+            btn.classList.remove('is-starred');
+          } else {
+            localStorage.setItem('star-' + id, 'true');
+            btn.style.color = '#ecc94b';
+            btn.classList.add('is-starred');
+          }
+        });
+      });
+
+      // 處理只顯示星號文章的過濾器
+      const filterBtn = document.getElementById('filter-starred');
+      let isFilterActive = false;
+
+      if (filterBtn) {
+        filterBtn.addEventListener('click', () => {
+          isFilterActive = !isFilterActive;
+          const allListItems = document.querySelectorAll('.archive-item');
+          
+          if (isFilterActive) {
+            filterBtn.style.background = '#ecc94b';
+            filterBtn.style.color = '#fff';
+            filterBtn.innerText = '⭐ 顯示全部';
+            
+            allListItems.forEach(li => {
+              const starBtn = li.querySelector('.star-btn');
+              if (starBtn && starBtn.classList.contains('is-starred')) {
+                li.style.display = 'block';
+              } else {
+                li.style.display = 'none';
+              }
+            });
+          } else {
+            filterBtn.style.background = '#fff3c4';
+            filterBtn.style.color = '#b7791f';
+            filterBtn.innerText = '⭐ 只看星號收藏';
+            
+            allListItems.forEach(li => {
+              li.style.display = 'block';
+            });
+          }
+        });
+      }
+    </script>
   </body>
 </html>
