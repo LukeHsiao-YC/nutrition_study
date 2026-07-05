@@ -33,7 +33,8 @@ except Exception as e:
 
 model = genai.GenerativeModel(target_model)
 
-JOURNAL_QUERIES = {
+# 完整的 18 本期刊清單
+ALL_JOURNAL_QUERIES = {
     "PedObes": ('"Pediatric obesity"[Journal]', "兒童肥胖"),
     "ObesRev": ('"Obesity reviews"[Journal]', "兒童肥胖"),
     "IJO": ('"International journal of obesity"[Journal]', "兒童肥胖"),
@@ -53,6 +54,31 @@ JOURNAL_QUERIES = {
     "JPEN": ('"JPEN. Journal of parenteral and enteral nutrition"[Journal]', "營養評估"),
     "JPGN": ('"Journal of pediatric gastroenterology and nutrition"[Journal]', "營養評估")
 }
+
+def get_today_batch():
+    # 將所有期刊的 key 轉成列表
+    keys = list(ALL_JOURNAL_QUERIES.keys())
+    
+    # 分成三組，每組 6 本
+    batch_0 = keys[0:6]
+    batch_1 = keys[6:12]
+    batch_2 = keys[12:18]
+    
+    # 利用「今年的第幾天」除以 3 的餘數來決定今天跑哪一組
+    yday = datetime.now().timetuple().tm_yday
+    batch_index = yday % 3
+    
+    if batch_index == 0:
+        active_keys = batch_0
+        print("今日任務：執行第一組期刊 (兒童肥胖、部分營養衛教)")
+    elif batch_index == 1:
+        active_keys = batch_1
+        print("今日任務：執行第二組期刊 (部分營養衛教、社區營養)")
+    else:
+        active_keys = batch_2
+        print("今日任務：執行第三組期刊 (營養流行病學、營養評估)")
+        
+    return {k: ALL_JOURNAL_QUERIES[k] for k in active_keys}
 
 def fetch_pubmed_articles(journal_query, count=3):
     articles = []
@@ -120,7 +146,10 @@ def main():
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    for journal_name, (query, category) in JOURNAL_QUERIES.items():
+    # 取得今天被分配到的那一組期刊
+    active_journals = get_today_batch()
+
+    for journal_name, (query, category) in active_journals.items():
         print(f"*** 正在透過 PubMed 搜尋 {journal_name} ({category}) ***")
         
         articles = fetch_pubmed_articles(query, count=3)
@@ -187,7 +216,9 @@ tags: {tags_yaml}
                     f.write(markdown_content)
                 
                 print(f"[成功] 成功生成並標記標籤！")
-                time.sleep(2)
+                
+                # ★ 強制休息 5 秒，徹底避開每分鐘請求限制
+                time.sleep(5)
                 
             except Exception as e:
                 print(f"[錯誤] 處理時發生錯誤，原因: {str(e)}")
