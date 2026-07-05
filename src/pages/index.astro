@@ -34,7 +34,6 @@ function getCategoryStyle(category) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>最新營養與兒童醫學文獻</title>
     <script is:inline>
-      // 網頁一載入就馬上讀取先前的字體設定，避免畫面字體突然變大變小
       const savedSize = localStorage.getItem('base-font-size') || '16';
       document.documentElement.style.fontSize = savedSize + 'px';
     </script>
@@ -43,104 +42,151 @@ function getCategoryStyle(category) {
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
       <h1 style="margin: 0;">最新文獻速報 (近七日)</h1>
       
-      <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
         <div style="background: #edf2f7; padding: 4px 8px; border-radius: 6px; display: flex; gap: 5px; align-items: center;">
           <span style="font-size: 0.85rem; color: #4a5568; margin-right: 4px;">字體</span>
           <button id="font-decrease" style="border: 1px solid #cbd5e0; background: white; padding: 4px 10px; border-radius: 4px; cursor: pointer; color: #2d3748;">A-</button>
           <button id="font-reset" style="border: 1px solid #cbd5e0; background: white; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; color: #2d3748;">預設</button>
           <button id="font-increase" style="border: 1px solid #cbd5e0; background: white; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; color: #2d3748;">A+</button>
         </div>
+        
+        <button id="filter-starred" style="padding: 6px 12px; background: #fff3c4; border: 1px solid #ecc94b; color: #b7791f; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: bold;">
+          ⭐ 只看星號
+        </button>
+
         <a href="/archive" style="padding: 8px 16px; background: #2c5282; color: white; text-decoration: none; border-radius: 4px; white-space: nowrap;">📂 歷史文獻庫</a>
       </div>
     </div>
 
-    <div style="margin-bottom: 30px; margin-top: 25px;">
-      <h3 style="margin-bottom: 10px;">文章標籤過濾：</h3>
-      <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+    {/* 這裡把原本的 div 換成 details 標籤，達成原生的收合效果 */}
+    <details style="margin-bottom: 30px; margin-top: 25px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+      <summary style="cursor: pointer; font-weight: bold; color: #2c5282; outline: none; font-size: 1.05rem;">
+        🔍 點此展開或收合所有文章標籤
+      </summary>
+      <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;">
         {allTags.map((tag) => (
-          <a href={`/tags/${tag}`} style="padding: 5px 12px; background: #f0f4f8; border-radius: 20px; text-decoration: none; color: #2c5282; font-size: 0.9rem;">
+          <a href={`/tags/${tag}`} style="padding: 5px 12px; background: #edf2f7; border-radius: 20px; text-decoration: none; color: #2c5282; font-size: 0.9rem; border: 1px solid #cbd5e0;">
             #{tag}
           </a>
         ))}
       </div>
+    </details>
+
+    <div id="articles-container">
+      {recentArticles.length === 0 ? (
+        <p style="color: #666; padding: 20px; text-align: center; background: #f9f9f9; border-radius: 8px;">最近七天沒有新的文獻更新。</p>
+      ) : (
+        recentArticles.map(async (article) => {
+          const { Content } = await article.render();
+          const articleId = article.data.title.replace(/\s+/g, '-').slice(0, 30);
+          
+          return (
+            <article class="paper-article" style="border: 1px solid #ddd; margin-bottom: 30px; padding: 20px; border-radius: 8px; position: relative;">
+              
+              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <h2 style="font-size: 1.2rem; margin-bottom: 10px; width: 85%; line-height: 1.4;">
+                  <span style={`display: inline-block; font-size: 0.8rem; padding: 4px 10px; border-radius: 6px; font-weight: bold; margin-right: 8px; vertical-align: middle; ${getCategoryStyle(article.data.category)}`}>
+                    {article.data.category}
+                  </span>
+                  <span style="vertical-align: middle;">{article.data.title}</span>
+                </h2>
+                
+                <button 
+                  class="star-btn" 
+                  data-id={articleId}
+                  style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #ccc;"
+                  title="標記為重要"
+                >
+                  ★
+                </button>
+              </div>
+              
+              <div style="display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
+                {article.data.tags.map((tag) => (
+                  <span style="font-size: 0.8rem; background: #edf2f7; padding: 2px 8px; border-radius: 4px; color: #4a5568;">#{tag}</span>
+                ))}
+              </div>
+
+              <p style="color: #666; font-size: 0.9rem;">
+                期刊名稱：{article.data.journal} | 收錄日期：{article.data.pubDate}
+              </p>
+              
+              <div style="margin-top: 10px; margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 10px;">
+                <a href={article.data.link} target="_blank" style="color: blue; text-decoration: none; display: flex; align-items: center;">🔗 閱讀原文</a>
+                
+                <button 
+                  class="copy-btn"
+                  data-content={`【${article.data.title}】\n\n${article.body}`}
+                  style="background: #2b6cb0; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem;"
+                >
+                  📝 複製給 NotebookLM
+                </button>
+              </div>
+
+              <div class="article-content" style="line-height: 1.6; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
+                <Content />
+              </div>
+            </article>
+          )
+        })
+      )}
     </div>
 
-    {recentArticles.length === 0 ? (
-      <p style="color: #666; padding: 20px; text-align: center; background: #f9f9f9; border-radius: 8px;">最近七天沒有新的文獻更新。</p>
-    ) : (
-      recentArticles.map(async (article) => {
-        const { Content } = await article.render();
-        const articleId = article.data.title.replace(/\s+/g, '-').slice(0, 30);
-        
-        return (
-          <article style="border: 1px solid #ddd; margin-bottom: 30px; padding: 20px; border-radius: 8px; position: relative;">
-            
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-              <h2 style="font-size: 1.2rem; margin-bottom: 10px; width: 85%; line-height: 1.4;">
-                <span style={`display: inline-block; font-size: 0.8rem; padding: 4px 10px; border-radius: 6px; font-weight: bold; margin-right: 8px; vertical-align: middle; ${getCategoryStyle(article.data.category)}`}>
-                  {article.data.category}
-                </span>
-                <span style="vertical-align: middle;">{article.data.title}</span>
-              </h2>
-              
-              <button 
-                class="star-btn" 
-                data-id={articleId}
-                style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #ccc;"
-                title="標記為重要"
-              >
-                ★
-              </button>
-            </div>
-            
-            <div style="display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
-              {article.data.tags.map((tag) => (
-                <span style="font-size: 0.8rem; background: #edf2f7; padding: 2px 8px; border-radius: 4px; color: #4a5568;">#{tag}</span>
-              ))}
-            </div>
-
-            <p style="color: #666; font-size: 0.9rem;">
-              期刊名稱：{article.data.journal} | 收錄日期：{article.data.pubDate}
-            </p>
-            
-            <div style="margin-top: 10px; margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 10px;">
-              <a href={article.data.link} target="_blank" style="color: blue; text-decoration: none; display: flex; align-items: center;">🔗 閱讀原文</a>
-              
-              <button 
-                class="copy-btn"
-                data-content={`【${article.data.title}】\n\n${article.body}`}
-                style="background: #2b6cb0; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem;"
-              >
-                📝 複製給 NotebookLM
-              </button>
-            </div>
-
-            <div class="article-content" style="line-height: 1.6; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
-              <Content />
-            </div>
-          </article>
-        )
-      })
-    )}
-
     <script>
-      // 處理星號點擊與記憶
+      // 處理星號點擊與狀態綁定
       document.querySelectorAll('.star-btn').forEach(btn => {
         const id = btn.getAttribute('data-id');
         if (localStorage.getItem('star-' + id)) {
           btn.style.color = '#ecc94b';
+          btn.classList.add('is-starred');
         }
 
         btn.addEventListener('click', () => {
           if (localStorage.getItem('star-' + id)) {
             localStorage.removeItem('star-' + id);
             btn.style.color = '#ccc';
+            btn.classList.remove('is-starred');
           } else {
             localStorage.setItem('star-' + id, 'true');
             btn.style.color = '#ecc94b';
+            btn.classList.add('is-starred');
           }
         });
       });
+
+      // 處理只顯示星號文章的過濾器
+      const filterBtn = document.getElementById('filter-starred');
+      let isFilterActive = false;
+
+      if (filterBtn) {
+        filterBtn.addEventListener('click', () => {
+          isFilterActive = !isFilterActive;
+          const allArticles = document.querySelectorAll('.paper-article');
+          
+          if (isFilterActive) {
+            filterBtn.style.background = '#ecc94b';
+            filterBtn.style.color = '#fff';
+            filterBtn.innerText = '⭐ 顯示全部';
+            
+            allArticles.forEach(article => {
+              const starBtn = article.querySelector('.star-btn');
+              if (starBtn && starBtn.classList.contains('is-starred')) {
+                article.style.display = 'block';
+              } else {
+                article.style.display = 'none';
+              }
+            });
+          } else {
+            filterBtn.style.background = '#fff3c4';
+            filterBtn.style.color = '#b7791f';
+            filterBtn.innerText = '⭐ 只看星號';
+            
+            allArticles.forEach(article => {
+              article.style.display = 'block';
+            });
+          }
+        });
+      }
 
       // 處理複製到 NotebookLM
       document.querySelectorAll('.copy-btn').forEach(btn => {
@@ -163,7 +209,7 @@ function getCategoryStyle(category) {
       const htmlRoot = document.documentElement;
       let currentSize = parseInt(localStorage.getItem('base-font-size')) || 16;
 
-      document.getElementById('font-increase').addEventListener('click', () => {
+      document.getElementById('font-increase')?.addEventListener('click', () => {
         if (currentSize < 24) {
           currentSize += 2;
           htmlRoot.style.fontSize = currentSize + 'px';
@@ -171,7 +217,7 @@ function getCategoryStyle(category) {
         }
       });
 
-      document.getElementById('font-decrease').addEventListener('click', () => {
+      document.getElementById('font-decrease')?.addEventListener('click', () => {
         if (currentSize > 12) {
           currentSize -= 2;
           htmlRoot.style.fontSize = currentSize + 'px';
@@ -179,7 +225,7 @@ function getCategoryStyle(category) {
         }
       });
 
-      document.getElementById('font-reset').addEventListener('click', () => {
+      document.getElementById('font-reset')?.addEventListener('click', () => {
         currentSize = 16;
         htmlRoot.style.fontSize = '16px';
         localStorage.setItem('base-font-size', '16');
