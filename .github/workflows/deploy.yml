@@ -1,0 +1,6 @@
+- name: 部署到 GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4 # 更新到 v4 版本，對大檔案處理更穩健
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          timeout_minutes: 10 # 延長超時等待時間
