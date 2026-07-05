@@ -33,7 +33,6 @@ except Exception as e:
 
 model = genai.GenerativeModel(target_model)
 
-# 完整的 18 本期刊清單
 ALL_JOURNAL_QUERIES = {
     "PedObes": ('"Pediatric obesity"[Journal]', "兒童肥胖"),
     "ObesRev": ('"Obesity reviews"[Journal]', "兒童肥胖"),
@@ -56,15 +55,12 @@ ALL_JOURNAL_QUERIES = {
 }
 
 def get_today_batch():
-    # 將所有期刊的 key 轉成列表
     keys = list(ALL_JOURNAL_QUERIES.keys())
     
-    # 分成三組，每組 6 本
     batch_0 = keys[0:6]
     batch_1 = keys[6:12]
     batch_2 = keys[12:18]
     
-    # 利用「今年的第幾天」除以 3 的餘數來決定今天跑哪一組
     yday = datetime.now().timetuple().tm_yday
     batch_index = yday % 3
     
@@ -84,7 +80,8 @@ def fetch_pubmed_articles(journal_query, count=3):
     articles = []
     try:
         encoded_query = urllib.parse.quote(journal_query)
-        search_url = f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term={encoded_query}&retmode=json&retmax={count}&sort=date"
+        # 加入 reldate=365 跟 datetype=pdat，嚴格限制只抓過去 365 天內「實際出版」的文章
+        search_url = f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term={encoded_query}&retmode=json&retmax={count}&sort=date&reldate=365&datetype=pdat"
         
         req = urllib.request.Request(search_url, headers={'User-Agent': 'Mozilla/5.0'})
         with urllib.request.urlopen(req) as response:
@@ -146,7 +143,6 @@ def main():
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    # 取得今天被分配到的那一組期刊
     active_journals = get_today_batch()
 
     for journal_name, (query, category) in active_journals.items():
@@ -217,7 +213,6 @@ tags: {tags_yaml}
                 
                 print(f"[成功] 成功生成並標記標籤！")
                 
-                # ★ 強制休息 5 秒，徹底避開每分鐘請求限制
                 time.sleep(5)
                 
             except Exception as e:
