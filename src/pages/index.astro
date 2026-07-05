@@ -51,17 +51,16 @@ function getCategoryStyle(category) {
         </div>
         
         <button id="filter-starred" style="padding: 6px 12px; background: #fff3c4; border: 1px solid #ecc94b; color: #b7791f; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: bold;">
-          ⭐ 只看星號
+          只看星號
         </button>
 
-        <a href="/archive" style="padding: 8px 16px; background: #2c5282; color: white; text-decoration: none; border-radius: 4px; white-space: nowrap;">📂 歷史文獻庫</a>
+        <a href="/archive" style="padding: 8px 16px; background: #2c5282; color: white; text-decoration: none; border-radius: 4px; white-space: nowrap;">歷史文獻庫</a>
       </div>
     </div>
 
-    {/* 這裡把原本的 div 換成 details 標籤，達成原生的收合效果 */}
     <details style="margin-bottom: 30px; margin-top: 25px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
       <summary style="cursor: pointer; font-weight: bold; color: #2c5282; outline: none; font-size: 1.05rem;">
-        🔍 點此展開或收合所有文章標籤
+        點此展開或收合所有文章標籤
       </summary>
       <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;">
         {allTags.map((tag) => (
@@ -112,14 +111,14 @@ function getCategoryStyle(category) {
               </p>
               
               <div style="margin-top: 10px; margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 10px;">
-                <a href={article.data.link} target="_blank" style="color: blue; text-decoration: none; display: flex; align-items: center;">🔗 閱讀原文</a>
+                <a href={article.data.link} target="_blank" style="color: blue; text-decoration: none; display: flex; align-items: center;">閱讀原文</a>
                 
                 <button 
                   class="copy-btn"
-                  data-content={`【${article.data.title}】\n\n${article.body}`}
+                  data-content={`【${article.data.title}】\n期刊名稱：${article.data.journal}\n發表時間：${article.data.pubDate}\nDOI：${article.data.doi || '無資料'}\n原文網址：${article.data.link}\n\n${article.body}`}
                   style="background: #2b6cb0; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem;"
                 >
-                  📝 複製給 NotebookLM
+                  複製給 NotebookLM
                 </button>
               </div>
 
@@ -133,7 +132,6 @@ function getCategoryStyle(category) {
     </div>
 
     <script>
-      // 處理星號點擊與狀態綁定
       document.querySelectorAll('.star-btn').forEach(btn => {
         const id = btn.getAttribute('data-id');
         if (localStorage.getItem('star-' + id)) {
@@ -154,7 +152,6 @@ function getCategoryStyle(category) {
         });
       });
 
-      // 處理只顯示星號文章的過濾器
       const filterBtn = document.getElementById('filter-starred');
       let isFilterActive = false;
 
@@ -166,7 +163,7 @@ function getCategoryStyle(category) {
           if (isFilterActive) {
             filterBtn.style.background = '#ecc94b';
             filterBtn.style.color = '#fff';
-            filterBtn.innerText = '⭐ 顯示全部';
+            filterBtn.innerText = '顯示全部';
             
             allArticles.forEach(article => {
               const starBtn = article.querySelector('.star-btn');
@@ -179,7 +176,7 @@ function getCategoryStyle(category) {
           } else {
             filterBtn.style.background = '#fff3c4';
             filterBtn.style.color = '#b7791f';
-            filterBtn.innerText = '⭐ 只看星號';
+            filterBtn.innerText = '只看星號';
             
             allArticles.forEach(article => {
               article.style.display = 'block';
@@ -188,7 +185,6 @@ function getCategoryStyle(category) {
         });
       }
 
-      // 處理複製到 NotebookLM
       document.querySelectorAll('.copy-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
           const content = e.target.getAttribute('data-content');
@@ -205,7 +201,6 @@ function getCategoryStyle(category) {
         });
       });
 
-      // 處理字體放大縮小
       const htmlRoot = document.documentElement;
       let currentSize = parseInt(localStorage.getItem('base-font-size')) || 16;
 
