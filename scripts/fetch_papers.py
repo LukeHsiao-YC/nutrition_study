@@ -8,7 +8,6 @@ import time
 from datetime import datetime
 import google.generativeai as genai
 
-# 使用環境變數讀取 GitHub Secrets 的金鑰
 api_key = os.environ.get("GEMINI_API_KEY")
 genai.configure(api_key=api_key)
 
@@ -80,7 +79,6 @@ def fetch_pubmed_articles(journal_query, count=3):
     articles = []
     try:
         encoded_query = urllib.parse.quote(journal_query)
-        # 加入 reldate=365 跟 datetype=pdat，嚴格限制只抓過去 365 天內「實際出版」的文章
         search_url = f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term={encoded_query}&retmode=json&retmax={count}&sort=date&reldate=365&datetype=pdat"
         
         req = urllib.request.Request(search_url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -110,11 +108,24 @@ def fetch_pubmed_articles(journal_query, count=3):
             pmid = pmid_elem.text if pmid_elem is not None else ""
             link = f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/" if pmid else ""
             
+            # 抓取 DOI
+            doi = ""
+            for article_id in article.findall('.//ArticleId'):
+                if article_id.get('IdType') == 'doi':
+                    doi = article_id.text
+                    break
+            if not doi:
+                for eloc in article.findall('.//ELocationID'):
+                    if eloc.get('EIdType') == 'doi':
+                        doi = eloc.text
+                        break
+            
             articles.append({
                 "title": title,
                 "summary": summary,
                 "link": link,
-                "pmid": pmid
+                "pmid": pmid,
+                "doi": doi
             })
     except Exception as e:
         print(f"PubMed 抓取失敗: {e}")
@@ -157,6 +168,7 @@ def main():
             summary = article['summary']
             link = article['link']
             pmid = article['pmid']
+            doi = article['doi']
             
             if summary == "無摘要內容" or len(summary) < 20:
                 continue
@@ -195,6 +207,7 @@ journal: "{journal_name}"
 category: "{category}"
 pubDate: "{date_str}"
 link: "{link}"
+doi: "{doi}"
 tags: {tags_yaml}
 ---
 
