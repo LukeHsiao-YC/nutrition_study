@@ -5,3 +5,6 @@ google-generativeai
 # 深讀道進料(Phase 1,ingest.py)
 markitdown[pdf]
 certifi
+
+# 投影片後備(Phase 5,paper_to_marp.py)
+pyyaml

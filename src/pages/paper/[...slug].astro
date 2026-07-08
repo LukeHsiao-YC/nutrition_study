@@ -1,17 +1,28 @@
 ---
 import { getCollection } from 'astro:content';
 import ResearchCard from '../../components/ResearchCard.astro';
+import { toBibTeX } from '../../lib/cite';
 
 export async function getStaticPaths() {
   const articles = await getCollection('articles');
-  return articles.map((a) => ({ params: { slug: a.slug }, props: { article: a } }));
+  return articles.map((a) => ({ params: { slug: a.slug }, props: { article: a, all: articles } }));
 }
 
-const { article } = Astro.props;
+const { article, all } = Astro.props;
 const { Content } = await article.render();
 const d = article.data;
 const base = import.meta.env.BASE_URL;
 const isDeep = (d.depth || 'triage') !== 'triage';
+const bibtex = toBibTeX(d);
+
+// 相關文獻:共用標籤數最多者,取前 5
+const myTags = new Set(d.tags || []);
+const related = all
+  .filter((a) => a.slug !== article.slug)
+  .map((a) => ({ a, shared: (a.data.tags || []).filter((t) => myTags.has(t)).length }))
+  .filter((x) => x.shared > 0)
+  .sort((x, y) => y.shared - x.shared)
+  .slice(0, 5);
 
 function getCategoryStyle(category) {
   switch (category) {
@@ -51,7 +62,12 @@ function getCategoryStyle(category) {
         <a href={`${base}tags/${tag}`} style="font-size:0.78rem; background:#edf2f7; padding:2px 8px; border-radius:4px; color:#2c5282; text-decoration:none;">#{tag}</a>
       ))}
     </div>
-    {d.link && <a href={d.link} target="_blank" style="color:#2b6cb0; text-decoration:none; font-size:0.9rem;">↗ 閱讀原文（PubMed）</a>}
+    <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin-top:4px;">
+      {d.link && <a href={d.link} target="_blank" style="color:#2b6cb0; text-decoration:none; font-size:0.9rem;">↗ 閱讀原文（PubMed）</a>}
+      <button id="copy-bib" style="background:#2b6cb0; color:#fff; border:none; padding:5px 12px; border-radius:5px; cursor:pointer; font-size:0.82rem;">📋 複製 BibTeX</button>
+      <a href={`${base}paper/${article.slug}.bib`} download style="color:#4a5568; text-decoration:none; font-size:0.82rem;">⬇ .bib</a>
+      <a href={`${base}paper/${article.slug}.ris`} download style="color:#4a5568; text-decoration:none; font-size:0.82rem;">⬇ .ris</a>
+    </div>
 
     {isDeep && (
       <div style="margin-top:20px;">
@@ -64,5 +80,32 @@ function getCategoryStyle(category) {
     <div data-pagefind-body style="line-height:1.7;">
       <Content />
     </div>
+
+    {related.length > 0 && (
+      <div style="margin-top:30px; padding-top:16px; border-top:1px solid #e2e8f0;">
+        <h3 style="color:#2c5282; font-size:1rem;">🔗 相關文獻(共同標籤)</h3>
+        <ul style="list-style:none; padding:0;">
+          {related.map(({ a, shared }) => (
+            <li style="padding:6px 0; border-bottom:1px solid #f0f4f8;">
+              <a href={`${base}paper/${a.slug}`} style="color:#2b6cb0; text-decoration:none;">{a.data.title}</a>
+              <span style="color:#a0aec0; font-size:0.8rem;"> · {a.data.journal} · {shared} 個共同標籤</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+
+    <textarea id="bib-src" style="position:absolute; left:-9999px;" set:text={bibtex}></textarea>
+    <script is:inline>
+      document.getElementById('copy-bib')?.addEventListener('click', (e) => {
+        const src = document.getElementById('bib-src');
+        navigator.clipboard.writeText(src.value).then(() => {
+          const b = e.target;
+          const o = b.innerText;
+          b.innerText = '✓ 已複製';
+          setTimeout(() => (b.innerText = o), 1800);
+        });
+      });
+    </script>
   </body>
 </html>

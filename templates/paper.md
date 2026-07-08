@@ -13,6 +13,7 @@ link: ""
 doi: ""
 pmid: ""
 tags: []
+authors: []               # 作者(Crossref 自動填,供 BibTeX/RIS 匯出)
 
 # ── 狀態機 ──
 depth: "reading"            # triage(摘要) → reading(全文萃取中) → done(已確認)

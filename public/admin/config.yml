@@ -49,6 +49,7 @@ collections:
       - { label: DOI, name: doi, widget: string, required: false }
       - { label: PMID, name: pmid, widget: string, required: false }
       - { label: 標籤, name: tags, widget: list, required: false }
+      - { label: 作者, name: authors, widget: list, required: false }
 
       # ── 狀態機 ──
       - label: 深讀階段

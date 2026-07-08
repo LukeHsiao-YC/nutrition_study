@@ -1,0 +1,78 @@
+---
+import { getCollection } from 'astro:content';
+const all = await getCollection('articles');
+const base = import.meta.env.BASE_URL;
+
+// 以「該週週一」為分組鍵
+function weekStart(d: Date): Date {
+  const x = new Date(d);
+  const day = (x.getDay() + 6) % 7; // 週一=0
+  x.setDate(x.getDate() - day);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+function fmt(d: Date): string {
+  return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+}
+
+const withDate = all
+  .map((a) => ({ a, d: new Date(a.data.pubDate) }))
+  .filter((x) => !isNaN(x.d.valueOf()))
+  .sort((x, y) => y.d.valueOf() - x.d.valueOf());
+
+const groups = new Map<string, { start: Date; items: typeof withDate }>();
+for (const it of withDate) {
+  const ws = weekStart(it.d);
+  const key = ws.toISOString().slice(0, 10);
+  if (!groups.has(key)) groups.set(key, { start: ws, items: [] as any });
+  groups.get(key)!.items.push(it);
+}
+const weeks = [...groups.values()].sort((a, b) => b.start.valueOf() - a.start.valueOf()).slice(0, 10);
+
+function catStyle(c: string) {
+  switch (c) {
+    case '兒童肥胖': return 'background:#feebc8;color:#dd6b20;';
+    case '營養衛教介入': return 'background:#c6f6d5;color:#38a169;';
+    case '社區營養': return 'background:#e6fffa;color:#319795;';
+    case '營養流行病學': return 'background:#faf5ff;color:#805ad5;';
+    case '營養評估': return 'background:#ebf8ff;color:#3182ce;';
+    default: return 'background:#edf2f7;color:#4a5568;';
+  }
+}
+---
+
+<html lang="zh-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>每週文獻彙整</title>
+  </head>
+  <body style="max-width: 820px; margin: 0 auto; padding: 20px; font-family: sans-serif;">
+    <div style="margin-bottom:8px;"><a href={base} style="color:#666; text-decoration:none;">← 返回首頁</a></div>
+    <h1 style="margin:6px 0 4px;">每週文獻彙整</h1>
+    <p style="color:#666; margin-top:0;">
+      依週分組的新文獻。
+      <a href={`${base}rss.xml`} style="color:#dd6b20; text-decoration:none;">📡 RSS 訂閱</a>
+      · <a href={`${base}library.bib`} style="color:#2b6cb0; text-decoration:none;">⬇ 全部 BibTeX</a>
+      · <a href={`${base}library.ris`} style="color:#2b6cb0; text-decoration:none;">⬇ 全部 RIS</a>
+    </p>
+
+    {weeks.map((w) => (
+      <div style="margin-bottom:28px;">
+        <h2 style="font-size:1.05rem; color:#2c5282; border-bottom:2px solid #e2e8f0; padding-bottom:6px;">
+          {fmt(w.start)} 這週 · {w.items.length} 篇
+        </h2>
+        <ul style="list-style:none; padding:0; margin:0;">
+          {w.items.map(({ a }) => (
+            <li style="padding:8px 0; border-bottom:1px solid #f0f4f8;">
+              <span style={`display:inline-block; font-size:0.72rem; padding:2px 8px; border-radius:5px; margin-right:8px; ${catStyle(a.data.category)}`}>{a.data.category}</span>
+              <a href={`${base}paper/${a.slug}`} style="color:#2b6cb0; text-decoration:none;">{a.data.title}</a>
+              <span style="color:#a0aec0; font-size:0.8rem;"> · {a.data.journal}</span>
+              {a.data.depth && a.data.depth !== 'triage' && <span style="margin-left:6px; font-size:0.7rem; background:#ebf8ff; color:#2b6cb0; padding:1px 6px; border-radius:4px;">深讀</span>}
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </body>
+</html>

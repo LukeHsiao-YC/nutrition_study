@@ -124,6 +124,7 @@ def _yaml_str(s):
 
 def build_frontmatter(meta):
     tags = "[" + ", ".join(_yaml_str(t) for t in meta.get("tags", [])) + "]"
+    authors = "[" + ", ".join(_yaml_str(a) for a in meta.get("authors", [])) + "]"
     return f"""---
 title: {_yaml_str(meta.get('title',''))}
 journal: {_yaml_str(meta.get('journal',''))}
@@ -133,6 +134,7 @@ link: {_yaml_str(meta.get('link',''))}
 doi: {_yaml_str(meta.get('doi',''))}
 pmid: {_yaml_str(meta.get('pmid',''))}
 tags: {tags}
+authors: {authors}
 depth: "reading"
 fulltext_source: {_yaml_str(meta.get('fulltext_source','upload'))}
 study_design: ""
@@ -230,7 +232,8 @@ def cmd_upload(paths):
             meta["doi"] = doi
             cr = crossref_lookup(doi)
             if cr:
-                meta.update(title=cr["title"], journal=cr["journal"], pubDate=cr["year"])
+                meta.update(title=cr["title"], journal=cr["journal"],
+                            pubDate=cr["year"], authors=cr["authors"])
                 print(f"  ✓ Crossref 驗證通過:{cr['title'][:60]}… ({cr['journal']}, {cr['year']})")
         if not meta.get("title"):
             # Crossref 沒查到 → 用檔名當暫定標題,基本資訊留白待你補
@@ -264,8 +267,8 @@ def cmd_pmc(pmid):
     if doi:
         cr = crossref_lookup(doi)
         if cr:
-            meta.update(doi=doi, title=cr["title"],
-                        journal=cr["journal"], pubDate=cr["year"])
+            meta.update(doi=doi, title=cr["title"], journal=cr["journal"],
+                        pubDate=cr["year"], authors=cr["authors"])
             print(f"  ✓ Crossref:{cr['title'][:60]}…")
         else:
             meta["doi"] = doi

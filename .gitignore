@@ -5,6 +5,9 @@ node_modules/
 dist/
 .astro/
 
+# 產生的投影片(可自行 force-add 想版控的)
+slides/
+
 # 深讀道原始檔:擋所有 PDF(版權/大小),但保留說明檔
 pdfs/*
 !pdfs/README.md

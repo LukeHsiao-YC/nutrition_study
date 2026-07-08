@@ -21,6 +21,7 @@ const articlesCollection = defineCollection({
     link: z.string(),
     doi: z.string().optional().default(''),
     tags: z.array(z.string()).default([]),
+    authors: z.array(z.string()).optional().default([]),
 
     // ── 狀態機:區分「快速道(摘要)」與「深讀道(全文)」──
     depth: z.enum(['triage', 'reading', 'done']).optional().default('triage'),
