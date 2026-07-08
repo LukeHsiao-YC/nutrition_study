@@ -5,8 +5,9 @@ node_modules/
 dist/
 .astro/
 
-# 深讀道原始檔(markitdown 前的 PDF,通常不進版控)
-pdfs/
+# 深讀道原始檔:擋所有 PDF(版權/大小),但保留說明檔
+pdfs/*
+!pdfs/README.md
 
 # OS / editor
 .DS_Store

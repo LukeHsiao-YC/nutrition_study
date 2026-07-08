@@ -1,0 +1,7 @@
+# 抓取(既有,fetch_papers.py)
+feedparser
+google-generativeai
+
+# 深讀道進料(Phase 1,ingest.py)
+markitdown[pdf]
+certifi
