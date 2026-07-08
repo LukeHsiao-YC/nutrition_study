@@ -22,6 +22,7 @@ export async function getStaticPaths() {
 
 const { tag } = Astro.params;
 const { articles } = Astro.props;
+const base = import.meta.env.BASE_URL;
 ---
 
 <html lang="zh-TW">
@@ -30,14 +31,16 @@ const { articles } = Astro.props;
     <title>標籤分類：{tag}</title>
   </head>
   <body style="max-width: 800px; margin: 0 auto; padding: 20px; font-family: sans-serif;">
-    <a href="/" style="color: #666; text-decoration: none;">返回首頁</a>
+    <a href={base} style="color: #666; text-decoration: none;">返回首頁</a>
     <h1>包含標籤「{tag}」的文獻</h1>
 
     {articles.map(async (article) => {
       const { Content } = await article.render();
       return (
         <article style="border: 1px solid #ddd; margin-bottom: 30px; padding: 20px; border-radius: 8px;">
-          <h2 style="font-size: 1.2rem;">{article.data.title}</h2>
+          <h2 style="font-size: 1.2rem;">
+            <a href={`${base}paper/${article.slug}`} style="color:#2b6cb0; text-decoration:none;">{article.data.title}</a>
+          </h2>
           <p style="color: #666; font-size: 0.9rem;">
             期刊名稱：{article.data.journal} | 收錄日期：{article.data.pubDate}
           </p>

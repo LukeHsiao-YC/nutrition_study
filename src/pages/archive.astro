@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 const allArticles = await getCollection('articles');
+const base = import.meta.env.BASE_URL;
 
 const sortedArticles = allArticles.sort((a, b) => 
   new Date(b.data.pubDate).valueOf() - new Date(a.data.pubDate).valueOf()
@@ -33,19 +34,25 @@ function getCategoryStyle(category) {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>歷史文獻庫</title>
+    <link rel="stylesheet" href={`${base}pagefind/pagefind-ui.css`} />
   </head>
   <body style="max-width: 800px; margin: 0 auto; padding: 20px; font-family: sans-serif;">
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px; margin-bottom: 30px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
       <div>
-        <a href="/" style="color: #666; text-decoration: none;">← 返回首頁</a>
+        <a href={base} style="color: #666; text-decoration: none;">← 返回首頁</a>
         <h1 style="margin-top: 10px; margin-bottom: 5px;">歷史文獻庫</h1>
         <p style="color: #666; margin-top: 0;">這裡收錄了所有過去抓取過的醫學與營養期刊文獻。</p>
       </div>
-      
-      <button id="filter-starred" style="padding: 6px 12px; background: #fff3c4; border: 1px solid #ecc94b; color: #b7791f; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: bold;">
-        ⭐ 只看星號收藏
-      </button>
+
+      <div style="display:flex; gap:10px; align-items:center;">
+        <a href={`${base}deepread`} style="padding: 8px 16px; background: #2c5282; color: white; text-decoration: none; border-radius: 4px; white-space: nowrap;">深讀庫</a>
+        <button id="filter-starred" style="padding: 6px 12px; background: #fff3c4; border: 1px solid #ecc94b; color: #b7791f; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: bold;">
+          ⭐ 只看星號收藏
+        </button>
+      </div>
     </div>
+
+    <div id="search" style="margin-bottom: 30px;"></div>
 
     {Object.keys(groupedArticles).map((monthYear) => (
       <div class="month-group" style="margin-bottom: 40px;">
@@ -61,7 +68,7 @@ function getCategoryStyle(category) {
                     <span style={`display: inline-block; font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; font-weight: bold; margin-right: 8px; vertical-align: text-bottom; ${getCategoryStyle(article.data.category)}`}>
                       {article.data.category}
                     </span>
-                    <a href={article.data.link} target="_blank" style="text-decoration: none; color: #2b6cb0; font-weight: bold; font-size: 1.1rem; vertical-align: middle;">
+                    <a href={`${base}paper/${article.slug}`} style="text-decoration: none; color: #2b6cb0; font-weight: bold; font-size: 1.1rem; vertical-align: middle;">
                       {article.data.title}
                     </a>
                   </div>
@@ -81,7 +88,7 @@ function getCategoryStyle(category) {
                 </div>
                 <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                   {article.data.tags.map((tag) => (
-                    <a href={`/tags/${tag}`} style="font-size: 0.75rem; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; color: #4a5568; text-decoration: none;">#{tag}</a>
+                    <a href={`${base}tags/${tag}`} style="font-size: 0.75rem; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; color: #4a5568; text-decoration: none;">#{tag}</a>
                   ))}
                 </div>
               </li>
@@ -146,6 +153,16 @@ function getCategoryStyle(category) {
           }
         });
       }
+    </script>
+
+    <!-- Pagefind 全站搜尋(索引由 build 後 pagefind 產生;dev 模式下不存在屬正常) -->
+    <script is:inline src={`${base}pagefind/pagefind-ui.js`} onerror="var s=document.getElementById('search'); if(s) s.innerHTML='<p style=\'color:#a0aec0;font-size:0.85rem\'>搜尋需 build 後才可用(npm run build / 線上站)。</p>';"></script>
+    <script is:inline define:vars={{ base }}>
+      window.addEventListener('DOMContentLoaded', () => {
+        if (window.PagefindUI) {
+          new PagefindUI({ element: '#search', bundlePath: base + 'pagefind/', showSubResults: true, pageSize: 8 });
+        }
+      });
     </script>
   </body>
 </html>

@@ -1,6 +1,53 @@
-- name: 部署到 GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4 # 更新到 v4 版本，對大檔案處理更穩健
+name: 建置並部署到 GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 允許一次一個部署,不取消進行中的
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 取得原始碼
+        uses: actions/checkout@v4
+
+      - name: 設定 Node
+        uses: actions/setup-node@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          timeout_minutes: 10 # 延長超時等待時間
+          node-version: 20
+
+      - name: 安裝套件
+        run: npm ci
+
+      - name: 建置(Astro + Pagefind 索引)
+        run: npm run build
+
+      - name: 設定 Pages
+        uses: actions/configure-pages@v5
+
+      - name: 上傳產物
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 部署到 GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,68 @@
+---
+import { getCollection } from 'astro:content';
+import ResearchCard from '../../components/ResearchCard.astro';
+
+export async function getStaticPaths() {
+  const articles = await getCollection('articles');
+  return articles.map((a) => ({ params: { slug: a.slug }, props: { article: a } }));
+}
+
+const { article } = Astro.props;
+const { Content } = await article.render();
+const d = article.data;
+const base = import.meta.env.BASE_URL;
+const isDeep = (d.depth || 'triage') !== 'triage';
+
+function getCategoryStyle(category) {
+  switch (category) {
+    case '兒童肥胖': return 'background: #feebc8; color: #dd6b20;';
+    case '營養衛教介入': return 'background: #c6f6d5; color: #38a169;';
+    case '社區營養': return 'background: #e6fffa; color: #319795;';
+    case '營養流行病學': return 'background: #faf5ff; color: #805ad5;';
+    case '營養評估': return 'background: #ebf8ff; color: #3182ce;';
+    default: return 'background: #edf2f7; color: #4a5568;';
+  }
+}
+---
+
+<html lang="zh-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{d.title}</title>
+  </head>
+  <body style="max-width: 820px; margin: 0 auto; padding: 20px; font-family: sans-serif;">
+    <div style="margin-bottom: 18px;">
+      <a href={base} style="color:#666; text-decoration:none;">← 首頁</a>
+      <span style="color:#cbd5e0;"> · </span>
+      <a href={`${base}deepread`} style="color:#666; text-decoration:none;">深讀庫</a>
+    </div>
+
+    <div style="margin-bottom:6px;">
+      <span style={`display:inline-block; font-size:0.78rem; padding:3px 10px; border-radius:6px; font-weight:bold; ${getCategoryStyle(d.category)}`}>{d.category}</span>
+      {isDeep && <span style="margin-left:8px; font-size:0.75rem; background:#ebf8ff; color:#2b6cb0; padding:3px 10px; border-radius:6px; font-weight:bold;">深讀 · {d.depth}</span>}
+    </div>
+    <h1 style="font-size:1.4rem; line-height:1.4; margin:8px 0;" data-pagefind-meta="title">{d.title}</h1>
+    <p style="color:#718096; font-size:0.9rem; margin:0 0 6px;">
+      {d.journal} · {d.pubDate}{d.doi && <> · DOI: {d.doi}</>}
+    </p>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
+      {(d.tags || []).map((tag) => (
+        <a href={`${base}tags/${tag}`} style="font-size:0.78rem; background:#edf2f7; padding:2px 8px; border-radius:4px; color:#2c5282; text-decoration:none;">#{tag}</a>
+      ))}
+    </div>
+    {d.link && <a href={d.link} target="_blank" style="color:#2b6cb0; text-decoration:none; font-size:0.9rem;">↗ 閱讀原文（PubMed）</a>}
+
+    {isDeep && (
+      <div style="margin-top:20px;">
+        <ResearchCard data={d} />
+      </div>
+    )}
+
+    <hr style="border:none; border-top:1px solid #e2e8f0; margin:24px 0;" />
+
+    <div data-pagefind-body style="line-height:1.7;">
+      <Content />
+    </div>
+  </body>
+</html>

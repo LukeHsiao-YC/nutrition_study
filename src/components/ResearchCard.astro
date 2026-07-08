@@ -1,0 +1,96 @@
+---
+// 深讀研究卡:把第一層/第二層萃取欄位渲染成結構化卡片
+// 第二層顯示 confirmed(綠,已確認)優先,否則顯示 ai_draft 並標紅「待確認」
+const { data } = Astro.props;
+
+const t1 = [
+  ['研究設計', data.study_design],
+  ['樣本數', data.sample_size],
+  ['收案條件', data.inclusion],
+  ['排除條件', data.exclusion],
+  ['量表 / 工具', (data.instruments || []).join('、')],
+  ['統計方法', (data.statistics || []).join('、')],
+  ['作者自陳限制', data.limitations_stated],
+  ['資助來源', data.funding],
+  ['利益衝突', data.coi],
+].filter(([, v]) => v && String(v).trim());
+
+// 第二層成對欄位
+function pair(p) {
+  if (!p) return null;
+  const confirmed = (p.confirmed || '').trim();
+  const draft = (p.ai_draft || '').trim();
+  if (!confirmed && !draft) return null;
+  return { confirmed, draft, done: !!confirmed };
+}
+const t2 = [
+  ['PICO / PECO', pair(data.pico)],
+  ['核心發現', pair(data.key_findings)],
+  ['研究缺口', pair(data.gap)],
+].filter(([, v]) => v);
+
+const robConfirmed = (data.rob?.confirmed || '').trim();
+const robDraft = (data.rob?.ai_draft || '').trim();
+const robTool = (data.rob?.tool || '').trim();
+const hasRob = robConfirmed || robDraft || robTool;
+---
+
+<div style="border:1px solid #d6dee8; border-radius:10px; padding:18px; background:#fff; margin-bottom:20px;">
+  {t1.length > 0 && (
+    <>
+      <h3 style="margin:0 0 10px; color:#2c5282; font-size:1rem;">📋 第一層 · 基本資訊(高信賴)</h3>
+      <table style="width:100%; border-collapse:collapse; font-size:0.9rem; margin-bottom:18px;">
+        <tbody>
+          {t1.map(([k, v]) => (
+            <tr style="border-bottom:1px solid #edf2f7;">
+              <td style="padding:7px 10px; font-weight:bold; color:#4a5568; width:130px; vertical-align:top; background:#f8fafc;">{k}</td>
+              <td style="padding:7px 10px; color:#2d3748; line-height:1.6;">{v}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
+  )}
+
+  {(t2.length > 0 || hasRob) && (
+    <h3 style="margin:0 0 10px; color:#2c5282; font-size:1rem;">🧠 第二層 · 分析(AI 草稿 → 你確認)</h3>
+  )}
+
+  {t2.map(([k, v]) => (
+    <div style="margin-bottom:12px;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+        <strong style="color:#2d3748; font-size:0.9rem;">{k}</strong>
+        {v.done
+          ? <span style="font-size:0.7rem; background:#c6f6d5; color:#276749; padding:1px 7px; border-radius:5px;">✓ 已確認</span>
+          : <span style="font-size:0.7rem; background:#fed7d7; color:#c53030; padding:1px 7px; border-radius:5px;">待確認</span>}
+      </div>
+      <div style={`font-size:0.9rem; line-height:1.65; padding:8px 12px; border-radius:6px; border-left:3px solid ${v.done ? '#38a169' : '#fc8181'}; background:${v.done ? '#f0fff4' : '#fff5f5'}; color:#2d3748;`}>
+        {v.done ? v.confirmed : v.draft}
+      </div>
+    </div>
+  ))}
+
+  {hasRob && (
+    <div style="margin-bottom:4px;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+        <strong style="color:#2d3748; font-size:0.9rem;">證據等級 / 風險偏誤</strong>
+        {robTool && <span style="font-size:0.72rem; background:#e2e8f0; color:#4a5568; padding:1px 7px; border-radius:5px;">{robTool}</span>}
+        {robConfirmed
+          ? <span style="font-size:0.7rem; background:#c6f6d5; color:#276749; padding:1px 7px; border-radius:5px;">✓ 已確認</span>
+          : (robDraft && <span style="font-size:0.7rem; background:#fed7d7; color:#c53030; padding:1px 7px; border-radius:5px;">待確認</span>)}
+      </div>
+      {(robConfirmed || robDraft) && (
+        <div style={`font-size:0.9rem; line-height:1.65; padding:8px 12px; border-radius:6px; border-left:3px solid ${robConfirmed ? '#38a169' : '#fc8181'}; background:${robConfirmed ? '#f0fff4' : '#fff5f5'}; color:#2d3748;`}>
+          {robConfirmed || robDraft}
+        </div>
+      )}
+    </div>
+  )}
+
+  {data.my_notes && data.my_notes.trim() && (
+    <div style="margin-top:14px; padding:10px 12px; background:#fffdf5; border:1px dashed #ecc94b; border-radius:6px;">
+      <strong style="color:#975a16; font-size:0.85rem;">✍️ 個人評語</strong>
+      <div style="font-size:0.9rem; line-height:1.65; color:#2d3748; margin-top:4px;">{data.my_notes}</div>
+    </div>
+  )}
+</div>

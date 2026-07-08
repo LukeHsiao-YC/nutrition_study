@@ -1,0 +1,93 @@
+---
+import { getCollection } from 'astro:content';
+import ResearchCard from '../components/ResearchCard.astro';
+
+const all = await getCollection('articles');
+const base = import.meta.env.BASE_URL;
+
+const deep = all
+  .filter((a) => (a.data.depth || 'triage') !== 'triage')
+  .sort((a, b) => new Date(b.data.pubDate).valueOf() - new Date(a.data.pubDate).valueOf());
+
+function pending(d) {
+  const pairs = [d.pico, d.rob, d.key_findings, d.gap];
+  return pairs.some((p) => p && (p.ai_draft || '').trim() && !(p.confirmed || '').trim());
+}
+function shortFinding(d) {
+  const kf = d.key_findings || {};
+  const txt = (kf.confirmed || kf.ai_draft || '').trim();
+  return txt.length > 90 ? txt.slice(0, 90) + '…' : txt;
+}
+function robLevel(d) {
+  const r = d.rob || {};
+  return (r.confirmed || r.ai_draft || '').trim();
+}
+---
+
+<html lang="zh-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>深讀庫 · 文獻矩陣</title>
+  </head>
+  <body style="max-width: 1100px; margin: 0 auto; padding: 20px; font-family: sans-serif;">
+    <div style="margin-bottom: 8px;">
+      <a href={base} style="color:#666; text-decoration:none;">← 返回首頁</a>
+    </div>
+    <h1 style="margin:6px 0 4px;">深讀庫 · 文獻矩陣</h1>
+    <p style="color:#666; margin-top:0;">已進入深讀道的論文({deep.length} 篇)。紅色代表尚有 AI 草稿未經你確認。</p>
+
+    {deep.length === 0 ? (
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:24px; color:#4a5568; line-height:1.8;">
+        <p style="margin:0 0 8px; font-weight:bold;">還沒有深讀道文章。</p>
+        <p style="margin:0;">把論文 PDF 丟進 <code>pdfs/</code>,執行 <code>python scripts/ingest.py upload</code>(或 <code>ingest.py pmc &lt;PMID&gt;</code>),再於 Claude Code 執行 extract-paper 萃取即可。</p>
+      </div>
+    ) : (
+      <>
+        <div style="overflow-x:auto; margin-bottom:34px; border:1px solid #e2e8f0; border-radius:8px;">
+          <table style="width:100%; border-collapse:collapse; font-size:0.85rem; min-width:820px;">
+            <thead>
+              <tr style="background:#2c5282; color:#fff; text-align:left;">
+                <th style="padding:9px 12px;">標題</th>
+                <th style="padding:9px 12px; white-space:nowrap;">研究設計</th>
+                <th style="padding:9px 12px; white-space:nowrap;">樣本數</th>
+                <th style="padding:9px 12px; white-space:nowrap;">證據評估</th>
+                <th style="padding:9px 12px;">核心發現</th>
+                <th style="padding:9px 12px; white-space:nowrap;">狀態</th>
+              </tr>
+            </thead>
+            <tbody>
+              {deep.map((a, i) => (
+                <tr style={`border-bottom:1px solid #edf2f7; background:${i % 2 ? '#f8fafc' : '#fff'};`}>
+                  <td style="padding:9px 12px; min-width:220px;">
+                    <a href={`${base}paper/${a.slug}`} style="color:#2b6cb0; text-decoration:none; font-weight:bold;">{a.data.title}</a>
+                    <div style="color:#a0aec0; font-size:0.75rem; margin-top:2px;">{a.data.journal} · {a.data.pubDate}</div>
+                  </td>
+                  <td style="padding:9px 12px;">{a.data.study_design || '—'}</td>
+                  <td style="padding:9px 12px;">{a.data.sample_size || '—'}</td>
+                  <td style="padding:9px 12px;">{a.data.rob?.tool ? <span>{a.data.rob.tool}</span> : '—'}</td>
+                  <td style="padding:9px 12px; color:#4a5568;">{shortFinding(a.data) || '—'}</td>
+                  <td style="padding:9px 12px; white-space:nowrap;">
+                    {pending(a.data)
+                      ? <span style="font-size:0.72rem; background:#fed7d7; color:#c53030; padding:2px 8px; border-radius:5px; font-weight:bold;">待確認</span>
+                      : <span style="font-size:0.72rem; background:#c6f6d5; color:#276749; padding:2px 8px; border-radius:5px; font-weight:bold;">已確認</span>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <h2 style="color:#2c5282; border-bottom:2px solid #2c5282; padding-bottom:6px;">研究卡</h2>
+        {deep.map((a) => (
+          <div style="margin-top:22px;">
+            <h3 style="margin:0 0 8px; font-size:1.05rem;">
+              <a href={`${base}paper/${a.slug}`} style="color:#2d3748; text-decoration:none;">{a.data.title}</a>
+            </h3>
+            <ResearchCard data={a.data} />
+          </div>
+        ))}
+      </>
+    )}
+  </body>
+</html>
