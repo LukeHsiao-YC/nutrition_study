@@ -1,0 +1,19 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+.astro/
+
+# 深讀道原始檔(markitdown 前的 PDF,通常不進版控)
+pdfs/
+
+# OS / editor
+.DS_Store
+*.log
+.vscode/
+.idea/
+
+# secrets(以防萬一,API key 一律走 GitHub Secrets,不進 repo)
+.env
+.env.local
