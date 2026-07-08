@@ -15,6 +15,11 @@ pdfs/*
 .vscode/
 .idea/
 
+# Obsidian:排除工作區快取,保留可共用的 vault 設定
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache
+
 # secrets(以防萬一,API key 一律走 GitHub Secrets,不進 repo)
 .env
 .env.local

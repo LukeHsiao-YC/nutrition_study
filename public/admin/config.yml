@@ -1,0 +1,117 @@
+# Decap CMS 設定 — 以 GitHub 登入,直接編輯 repo 內的論文 md
+# ⚠️ 部署 Cloudflare Worker 後,把 base_url 換成你的 worker 網址(見 docs/SETUP-CMS.md)
+
+backend:
+  name: github
+  repo: LukeHsiao-YC/nutrition_study
+  branch: main
+  base_url: https://REPLACE-WITH-YOUR-WORKER.workers.dev  # ← 換成你的 Worker 網址
+  auth_endpoint: auth
+
+# Decap 需要 media 設定;此站不上傳圖片,設一個佔位資料夾即可
+media_folder: "public/uploads"
+public_folder: "/uploads"
+
+locale: "zh_Hant"
+
+collections:
+  - name: articles
+    label: 論文
+    label_singular: 論文
+    folder: src/content/articles
+    create: true
+    extension: md
+    format: frontmatter
+    identifier_field: title
+    summary: "{{fields.title}} — {{fields.journal}} ({{fields.pubDate}}) [{{fields.depth}}]"
+    sortable_fields: [pubDate, depth, journal, title]
+    view_filters:
+      - label: 深讀道(reading)
+        field: depth
+        pattern: reading
+      - label: 已完成(done)
+        field: depth
+        pattern: done
+      - label: 快速道(triage)
+        field: depth
+        pattern: triage
+    fields:
+      # ── 基本資訊 ──
+      - { label: 標題, name: title, widget: string }
+      - { label: 期刊, name: journal, widget: string }
+      - label: 分類
+        name: category
+        widget: select
+        default: 未分類
+        options: [兒童肥胖, 營養衛教介入, 社區營養, 營養流行病學, 營養評估, 未分類]
+      - { label: 發表日期, name: pubDate, widget: string, hint: "格式 YYYY-MM-DD 或年份" }
+      - { label: 原文連結, name: link, widget: string, required: false }
+      - { label: DOI, name: doi, widget: string, required: false }
+      - { label: PMID, name: pmid, widget: string, required: false }
+      - { label: 標籤, name: tags, widget: list, required: false }
+
+      # ── 狀態機 ──
+      - label: 深讀階段
+        name: depth
+        widget: select
+        default: triage
+        options: [triage, reading, done]
+        hint: "triage=摘要速報 / reading=全文萃取中 / done=你已確認"
+      - label: 全文來源
+        name: fulltext_source
+        widget: select
+        required: false
+        options: ["", pmc, upload, unpaywall, none]
+
+      # ── 第一層:高信賴 ──
+      - { label: 研究設計, name: study_design, widget: string, required: false }
+      - { label: 樣本數, name: sample_size, widget: string, required: false }
+      - { label: 收案條件, name: inclusion, widget: text, required: false }
+      - { label: 排除條件, name: exclusion, widget: text, required: false }
+      - { label: 量表 / 工具, name: instruments, widget: list, required: false }
+      - { label: 統計方法, name: statistics, widget: list, required: false }
+      - { label: 作者自陳限制, name: limitations_stated, widget: text, required: false }
+      - { label: 資助來源, name: funding, widget: string, required: false }
+      - { label: 利益衝突, name: coi, widget: string, required: false }
+
+      # ── 第二層:AI 草稿 → 你確認 ──
+      - label: "PICO / PECO"
+        name: pico
+        widget: object
+        required: false
+        collapsed: false
+        fields:
+          - { label: AI 草稿, name: ai_draft, widget: text, required: false }
+          - { label: ✅ 我的確認, name: confirmed, widget: text, required: false, hint: "確認/修訂後填這裡;留空代表尚未確認" }
+      - label: 證據等級 / 風險偏誤
+        name: rob
+        widget: object
+        required: false
+        collapsed: false
+        fields:
+          - { label: 評估工具, name: tool, widget: string, required: false, hint: "Cochrane-RoB2 / Newcastle-Ottawa / AMSTAR-2" }
+          - { label: AI 草稿, name: ai_draft, widget: text, required: false }
+          - { label: ✅ 我的確認, name: confirmed, widget: text, required: false }
+      - label: 核心發現
+        name: key_findings
+        widget: object
+        required: false
+        collapsed: false
+        fields:
+          - { label: AI 草稿, name: ai_draft, widget: text, required: false }
+          - { label: ✅ 我的確認, name: confirmed, widget: text, required: false }
+      - label: 研究缺口
+        name: gap
+        widget: object
+        required: false
+        collapsed: false
+        fields:
+          - { label: AI 草稿, name: ai_draft, widget: text, required: false }
+          - { label: ✅ 我的確認, name: confirmed, widget: text, required: false }
+
+      # ── 關聯與個人 ──
+      - { label: 關聯論文(PMID), name: related, widget: list, required: false }
+      - { label: 個人評語, name: my_notes, widget: text, required: false }
+
+      # ── 內文(含原文全文)──
+      - { label: 內文, name: body, widget: markdown, required: false }
