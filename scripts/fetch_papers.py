@@ -11,24 +11,27 @@ import google.generativeai as genai
 api_key = os.environ.get("GEMINI_API_KEY")
 genai.configure(api_key=api_key)
 
-target_model = "gemini-1.5-flash"
+# 動態挑選可用的新版 flash 模型(1.5 已淘汰;避開 image/tts/preview 等特殊版)
+target_model = "gemini-2.5-flash"
 try:
-    available_models = []
-    for m in genai.list_models():
-        if 'generateContent' in m.supported_generation_methods:
-            available_models.append(m.name)
-            
-    for m_name in available_models:
-        if '1.5-flash' in m_name:
-            target_model = m_name
-            break
-    else:
-        for m_name in available_models:
-            if 'pro' in m_name or 'flash' in m_name:
-                target_model = m_name
-                break
+    available = {
+        m.name.replace("models/", "")
+        for m in genai.list_models()
+        if 'generateContent' in m.supported_generation_methods
+    }
+    preferred = ("gemini-2.5-flash", "gemini-2.0-flash",
+                 "gemini-2.5-flash-lite", "gemini-2.0-flash-lite")
+    picked = next((n for n in preferred if n in available), None)
+    if not picked:
+        picked = next(
+            (n for n in sorted(available)
+             if 'flash' in n and not any(x in n for x in ('image', 'tts', 'preview', 'exp'))),
+            None,
+        )
+    if picked:
+        target_model = picked
 except Exception as e:
-    print(f"無法獲取模型清單，使用預設值。原因: {e}")
+    print(f"無法獲取模型清單，使用預設值 {target_model}。原因: {e}")
 
 model = genai.GenerativeModel(target_model)
 
