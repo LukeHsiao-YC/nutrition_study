@@ -54,7 +54,14 @@ export default {
         : { error: data.error_description || data.error || 'no token' };
       const message = `authorization:${PROVIDER}:${status}:${JSON.stringify(payload)}`;
 
-      const html = `<!doctype html><html><body><script>
+      // 失敗時把 GitHub 回傳的原因顯示在畫面上,方便診斷(成功時 Decap 會自動關閉此視窗)
+      const diag = ok
+        ? '登入成功,視窗即將關閉…'
+        : '❌ 換 token 失敗:' + (data.error_description || data.error || JSON.stringify(data));
+
+      const html = `<!doctype html><html><body style="font-family:sans-serif;padding:24px;">
+<p>${diag}</p>
+<script>
 (function () {
   function receiveMessage(e) {
     window.opener.postMessage(${JSON.stringify(message)}, e.origin);
