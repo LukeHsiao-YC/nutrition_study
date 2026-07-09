@@ -5,7 +5,7 @@ backend:
   name: github
   repo: LukeHsiao-YC/nutrition_study
   branch: main
-  base_url: https://REPLACE-WITH-YOUR-WORKER.workers.dev  # ← 換成你的 Worker 網址
+  base_url: https://nutrition-cms-auth.u9602041.workers.dev
   auth_endpoint: auth
 
 # Decap 需要 media 設定;此站不上傳圖片,設一個佔位資料夾即可
