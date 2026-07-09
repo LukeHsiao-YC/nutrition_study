@@ -64,6 +64,14 @@ key_findings:
 gap:
   ai_draft: 目前 JITAI 缺乏證據指引『高風險當下該推送哪種理論導向介入』;本 MRT 優化後的 JITAI 仍需以未來 RCT 驗證遠端健康結果(如體重減輕)
   confirmed: ""
+grade:
+  certainty: ""
+  ai_draft: "GRADE 不適用:本文為研究計畫(protocol),尚無結果、無可評的結果證據等級。改評計畫品質:已於 ClinicalTrials.gov 註冊(NCT04784585)、有預先指定的分析計畫(ITT、遵循 CONSORT)、微隨機化(MRT)之個體內隨機可降低近端效果混雜——設計面屬佳。等試驗完成、有結果後,再對各結果逐一跑 GRADE。"
+  confirmed: ""
+spin:
+  ai_draft: "argdown_lint 稽核:立論『JITAI 能在高風險當下預防飲食失守』屬 benefit 主張,但目前僅 2 個小型 pilot 支撐、缺效力 RCT(flag:benefit 缺 direct_rct)。惟本文措辭審慎、明言效力『尚未直接驗證』,此 MRT 正是要檢驗它——故非作者過度推論,而是提醒讀者勿把 JITAI 效力當已確立。"
+  confirmed: ""
+ref_check: "本文 DOI 10.2196/33568 經 CrossRef 驗證存在且標題吻合(JMIR Research Protocols, 2021);試驗註冊 NCT04784585。引用清單未逐筆抽驗。"
 related: []
 my_notes: ""
 ---
