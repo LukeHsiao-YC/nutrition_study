@@ -1,36 +1,68 @@
 ---
-title: "Optimizing a Just-in-Time Adaptive Intervention to Improve Dietary Adherence in Behavioral Obesity Treatment: Protocol for a Microrandomized Trial"
-journal: "JMIR Research Protocols"
-category: "未分類"
+title: "Optimizing a Just-in-Time Adaptive Intervention to Improve Dietary
+  Adherence in Behavioral Obesity Treatment: Protocol for a Microrandomized
+  Trial"
+journal: JMIR Research Protocols
+category: 未分類
 pubDate: "2021"
 link: ""
-doi: "10.2196/33568"
+doi: 10.2196/33568
 pmid: ""
-tags: ["肥胖治療", "飲食依從", "即時適應介入(JITAI)", "微隨機試驗", "行動健康"]
-authors: ["Stephanie P Goldstein", "Fengqing Zhang", "Predrag Klasnja", "Adam Hoover", "Rena R Wing", "John Graham Thomas"]
-depth: "reading"
-fulltext_source: "upload"
-study_design: "微隨機試驗(microrandomized trial, MRT)研究計畫(protocol);6 個月網路行為肥胖治療(RxWL)搭配智慧型手機 JITAI,於每個高風險決策點內部隨機分派"
-sample_size: "n=159 名過重/肥胖且具 CVD 風險的成人;每人於研究期間約可被微隨機化 100 次以上(決策點)"
-inclusion: "BMI 25–50 kg/m²;年齡 18–70 歲;醫師確診 前期糖尿病/第二型糖尿病/高膽固醇血症/高血壓 之一;可連續步行兩個街區;英語流利且達 6 年級識讀程度"
-exclusion: "正參加其他減重計畫;正服用減重藥物;入組前 6 個月內體重下降 >5%;入組前 6 個月內懷孕或計畫 6 個月內懷孕;近 12 個月活動/休息時有胸痛或曾昏厥;其他不適合安全參與減重之醫療狀況"
-instruments: ["生態瞬時評估 EMA(每日多次問卷)", "機器學習失守風險演算法", "PiLR Health 平台", "RxWL 網路行為肥胖治療", "ActiGraph(配戴時間)", "無線體重計"]
-statistics: ["廣義多層次模型(近端結果:隨機化後 2.5 小時內是否失守)", "intention-to-treat", "處理階層式資料結構與時間趨勢交互作用", "探索性調節因子分析(未正式校正多重比較)", "遵循 CONSORT"]
-limitations_stated: "本文為研究計畫,未列明確研究限制;探索性調節分析未正式校正多重比較,結論將審慎詮釋(此為 ai_draft,待你核對)"
-funding: "美國國家心肺血液研究所(NHLBI),補助號 R01 HL153543"
-coi: "JGT(John Graham Thomas)曾任 Lumme Health 科學顧問委員並擔任其有給顧問;其餘作者未宣告"
+tags:
+  - 肥胖治療
+  - 飲食依從
+  - 即時適應介入(JITAI)
+  - 微隨機試驗
+  - 行動健康
+authors:
+  - Stephanie P Goldstein
+  - Fengqing Zhang
+  - Predrag Klasnja
+  - Adam Hoover
+  - Rena R Wing
+  - John Graham Thomas
+depth: done
+fulltext_source: upload
+study_design: 微隨機試驗(microrandomized trial, MRT)研究計畫(protocol);6
+  個月網路行為肥胖治療(RxWL)搭配智慧型手機 JITAI,於每個高風險決策點內部隨機分派
+sample_size: n=159 名過重/肥胖且具 CVD 風險的成人;每人於研究期間約可被微隨機化 100 次以上(決策點)
+inclusion: BMI 25–50 kg/m²;年齡 18–70 歲;醫師確診 前期糖尿病/第二型糖尿病/高膽固醇血症/高血壓
+  之一;可連續步行兩個街區;英語流利且達 6 年級識讀程度
+exclusion: 正參加其他減重計畫;正服用減重藥物;入組前 6 個月內體重下降 >5%;入組前 6 個月內懷孕或計畫 6 個月內懷孕;近 12
+  個月活動/休息時有胸痛或曾昏厥;其他不適合安全參與減重之醫療狀況
+instruments:
+  - 生態瞬時評估 EMA(每日多次問卷)
+  - 機器學習失守風險演算法
+  - PiLR Health 平台
+  - RxWL 網路行為肥胖治療
+  - ActiGraph(配戴時間)
+  - 無線體重計
+statistics:
+  - 廣義多層次模型(近端結果:隨機化後 2.5 小時內是否失守)
+  - intention-to-treat
+  - 處理階層式資料結構與時間趨勢交互作用
+  - 探索性調節因子分析(未正式校正多重比較)
+  - 遵循 CONSORT
+limitations_stated: 本文為研究計畫,未列明確研究限制;探索性調節分析未正式校正多重比較,結論將審慎詮釋(此為 ai_draft,待你核對)
+funding: 美國國家心肺血液研究所(NHLBI),補助號 R01 HL153543
+coi: JGT(John Graham Thomas)曾任 Lumme Health 科學顧問委員並擔任其有給顧問;其餘作者未宣告
 pico:
-  ai_draft: "P: 過重/肥胖且≥1 項 CVD 風險因子的成人(n=159),參與 6 個月網路行為肥胖治療;I: 手機 JITAI 於偵測高失守風險時推送 4 種理論導向介入之一(教育/自我效能/動機/自我調節)或一般風險警示;C: 不介入,以及『一般警示 vs 理論導向』之比較;O: 近端結果=隨機化後 2.5 小時內是否發生飲食失守(lapse)"
+  ai_draft: "P: 過重/肥胖且≥1 項 CVD 風險因子的成人(n=159),參與 6 個月網路行為肥胖治療;I: 手機 JITAI
+    於偵測高失守風險時推送 4 種理論導向介入之一(教育/自我效能/動機/自我調節)或一般風險警示;C: 不介入,以及『一般警示 vs
+    理論導向』之比較;O: 近端結果=隨機化後 2.5 小時內是否發生飲食失守(lapse)"
   confirmed: ""
 rob:
-  tool: "N/A(研究計畫,尚無結果;未來有結果時可用 Cochrane-RoB2 評 MRT)"
-  ai_draft: "本文為 protocol,無結果故不做正式風險偏誤評分。設計面優點:預先註冊(NCT04784585)、ITT、遵循 CONSORT、MRT 之個體內隨機化可降低近端效果的混雜。待試驗完成、有結果後再依 RoB2 評估。"
+  tool: N/A(研究計畫,尚無結果;未來有結果時可用 Cochrane-RoB2 評 MRT)
+  ai_draft: 本文為 protocol,無結果故不做正式風險偏誤評分。設計面優點:預先註冊(NCT04784585)、ITT、遵循 CONSORT、MRT
+    之個體內隨機化可降低近端效果的混雜。待試驗完成、有結果後再依 RoB2 評估。
   confirmed: ""
 key_findings:
-  ai_draft: "此為研究計畫(protocol),尚無結果——2021-04-19 開始收案、發表時仍進行中。設計目的:以 MRT 判定哪種理論導向介入最能在當下預防飲食失守,並探索時間/地點等情境調節因子,以優化 JITAI。註冊:ClinicalTrials.gov NCT04784585"
+  ai_draft: 此為研究計畫(protocol),尚無結果——2021-04-19 開始收案、發表時仍進行中。設計目的:以 MRT
+    判定哪種理論導向介入最能在當下預防飲食失守,並探索時間/地點等情境調節因子,以優化 JITAI。註冊:ClinicalTrials.gov
+    NCT04784585
   confirmed: ""
 gap:
-  ai_draft: "目前 JITAI 缺乏證據指引『高風險當下該推送哪種理論導向介入』;本 MRT 優化後的 JITAI 仍需以未來 RCT 驗證遠端健康結果(如體重減輕)"
+  ai_draft: 目前 JITAI 缺乏證據指引『高風險當下該推送哪種理論導向介入』;本 MRT 優化後的 JITAI 仍需以未來 RCT 驗證遠端健康結果(如體重減輕)
   confirmed: ""
 related: []
 my_notes: ""
