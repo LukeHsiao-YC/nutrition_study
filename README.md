@@ -29,7 +29,8 @@
 | 頁面 | 網址 | 用途 |
 |---|---|---|
 | 首頁 | `/` | 近七日速報、星號收藏、標籤 |
-| 深讀庫 | `/deepread` | 文獻矩陣橫向比較 + 研究卡 + 待確認標示 |
+| 深讀庫 | `/deepread` | 文獻矩陣(含 GRADE 欄)+ 研究卡 + 待確認標示 |
+| 並排比較 | `/compare` | 勾選 2+ 篇 → 逐欄對照(寫 review 用) |
 | 每週彙整 | `/digest` | 依週分組的新文獻 + 匯出入口 |
 | 歷史文獻庫 | `/archive` | 全部文獻 + 全文搜尋(Pagefind) |
 | 論文詳情 | `/paper/<slug>` | 研究卡、引用匯出、相關文獻、全文 |
@@ -135,6 +136,10 @@ src/
 scripts/
   grade_judge.py       確定性計算 GRADE 證據等級(LLM 評級 → 程式重算)
   argdown_lint.py      確定性抓過度推論 / spin
+  zotero_sync.py       Zotero 雙向同步(push/pull;見 docs/SETUP-ZOTERO.md)
+
+autopilot 現在預設連 GRADE/spin 評讀一起跑;不想要加 --no-review。
+期刊來源在 scripts/fetch_papers.py 的 ALL_JOURNAL_QUERIES,一行一本可自行增刪。
 public/admin/          Decap CMS 後台
 oauth/worker.js        Decap OAuth 用的 Cloudflare Worker
 docs/                  SETUP-CMS.md / OBSIDIAN.md

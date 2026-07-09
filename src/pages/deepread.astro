@@ -44,7 +44,10 @@ function gradeStyle(c) {
       <a href={base} style="color:#666; text-decoration:none;">← 返回首頁</a>
     </div>
     <h1 style="margin:6px 0 4px;">深讀庫 · 文獻矩陣</h1>
-    <p style="color:#666; margin-top:0;">已進入深讀道的論文({deep.length} 篇)。紅色代表尚有 AI 草稿未經你確認。</p>
+    <p style="color:#666; margin-top:0;">
+      已進入深讀道的論文({deep.length} 篇)。紅色代表尚有 AI 草稿未經你確認。
+      {deep.length >= 2 && <> · <a href={`${base}compare`} style="color:#276749; text-decoration:none; font-weight:bold;">⇄ 勾選並排比較</a></>}
+    </p>
 
     {deep.length === 0 ? (
       <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:24px; color:#4a5568; line-height:1.8;">

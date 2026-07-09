@@ -1,0 +1,119 @@
+---
+import { getCollection } from 'astro:content';
+const all = await getCollection('articles');
+const base = import.meta.env.BASE_URL;
+
+const pick = (p: any) => (p ? (p.confirmed || p.ai_draft || '').trim() : '');
+
+// 只放深讀道文章的可比較欄位(精簡成前端資料)
+const deep = all
+  .filter((a) => (a.data.depth || 'triage') !== 'triage')
+  .sort((a, b) => new Date(b.data.pubDate).valueOf() - new Date(a.data.pubDate).valueOf())
+  .map((a) => ({
+    slug: a.slug,
+    title: a.data.title,
+    journal: a.data.journal,
+    year: a.data.pubDate,
+    design: a.data.study_design || '',
+    sample: a.data.sample_size || '',
+    grade: a.data.grade?.certainty || '',
+    rob: a.data.rob?.tool || '',
+    pico: pick(a.data.pico),
+    findings: pick(a.data.key_findings),
+    gap: pick(a.data.gap),
+    spin: pick(a.data.spin),
+  }));
+---
+
+<html lang="zh-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>並排比較</title>
+  </head>
+  <body style="max-width: 1200px; margin: 0 auto; padding: 20px; font-family: sans-serif;">
+    <div style="margin-bottom:8px;"><a href={`${base}deepread`} style="color:#666; text-decoration:none;">← 深讀庫</a></div>
+    <h1 style="margin:6px 0 4px;">並排比較</h1>
+    <p style="color:#666; margin-top:0;">勾選 2 篇以上,下方即產生逐欄對照(適合寫 literature review)。</p>
+
+    {deep.length < 2 ? (
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:24px; color:#4a5568;">
+        深讀道文章不足 2 篇,無法比較。先用 ingest + extract 多做幾篇。
+      </div>
+    ) : (
+      <>
+        <div id="picker" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;">
+          {deep.map((a) => (
+            <label style="display:flex; align-items:center; gap:6px; border:1px solid #cbd5e0; border-radius:8px; padding:6px 10px; font-size:0.85rem; cursor:pointer; background:#fff;">
+              <input type="checkbox" class="cmp" value={a.slug} />
+              <span>{a.title.length > 46 ? a.title.slice(0, 46) + '…' : a.title}</span>
+              <span style="color:#a0aec0;">· {a.journal}</span>
+            </label>
+          ))}
+        </div>
+        <div style="margin-bottom:16px;">
+          <button id="selall" style="padding:5px 12px; font-size:0.82rem; border:1px solid #cbd5e0; background:#fff; border-radius:6px; cursor:pointer;">全選</button>
+          <button id="clr" style="padding:5px 12px; font-size:0.82rem; border:1px solid #cbd5e0; background:#fff; border-radius:6px; cursor:pointer; margin-left:6px;">清除</button>
+          <span id="count" style="margin-left:10px; color:#718096; font-size:0.85rem;"></span>
+        </div>
+        <div id="out" style="overflow-x:auto;"></div>
+      </>
+    )}
+
+    <script type="application/json" id="data" set:html={JSON.stringify(deep)}></script>
+    <script is:inline define:vars={{ base }}>
+      const data = JSON.parse(document.getElementById('data').textContent);
+      const bySlug = Object.fromEntries(data.map((d) => [d.slug, d]));
+      const ROWS = [
+        ['期刊 / 年份', (d) => `${d.journal || ''} ${d.year || ''}`],
+        ['研究設計', (d) => d.design],
+        ['樣本數', (d) => d.sample],
+        ['GRADE', (d) => d.grade],
+        ['RoB 工具', (d) => d.rob],
+        ['PICO', (d) => d.pico],
+        ['核心發現', (d) => d.findings],
+        ['研究缺口', (d) => d.gap],
+        ['Spin', (d) => d.spin],
+      ];
+      const gradeColor = (c) => ({
+        High: 'background:#c6f6d5;color:#276749;',
+        Moderate: 'background:#bee3f8;color:#2c5282;',
+        Low: 'background:#feebc8;color:#c05621;',
+        'Very low': 'background:#fed7d7;color:#c53030;',
+      }[c] || '');
+
+      function esc(s) { const e = document.createElement('div'); e.textContent = s || '—'; return e.innerHTML; }
+
+      function render() {
+        const sel = [...document.querySelectorAll('.cmp:checked')].map((c) => c.value);
+        document.getElementById('count').textContent = sel.length ? `已選 ${sel.length} 篇` : '';
+        const out = document.getElementById('out');
+        if (sel.length < 2) { out.innerHTML = '<p style="color:#a0aec0;">勾選至少 2 篇。</p>'; return; }
+        const cols = sel.map((s) => bySlug[s]);
+        let h = '<table style="width:100%; border-collapse:collapse; font-size:0.85rem; min-width:640px;"><thead><tr>';
+        h += '<th style="padding:9px 12px; background:#2c5282; color:#fff; text-align:left; position:sticky; left:0;">欄位</th>';
+        for (const c of cols)
+          h += `<th style="padding:9px 12px; background:#2c5282; color:#fff; text-align:left; min-width:200px;"><a href="${base}paper/${c.slug}" style="color:#fff; text-decoration:none;">${esc(c.title)}</a></th>`;
+        h += '</tr></thead><tbody>';
+        for (const [label, fn] of ROWS) {
+          h += `<tr style="border-bottom:1px solid #edf2f7;"><td style="padding:9px 12px; font-weight:bold; color:#4a5568; background:#f8fafc; position:sticky; left:0; vertical-align:top;">${label}</td>`;
+          for (const c of cols) {
+            const v = fn(c);
+            if (label === 'GRADE' && v)
+              h += `<td style="padding:9px 12px; vertical-align:top;"><span style="font-weight:bold; padding:2px 8px; border-radius:5px; ${gradeColor(v)}">${esc(v)}</span></td>`;
+            else
+              h += `<td style="padding:9px 12px; vertical-align:top; line-height:1.6; color:#2d3748;">${esc(v)}</td>`;
+          }
+          h += '</tr>';
+        }
+        h += '</tbody></table>';
+        out.innerHTML = h;
+      }
+
+      document.querySelectorAll('.cmp').forEach((c) => c.addEventListener('change', render));
+      document.getElementById('selall')?.addEventListener('click', () => { document.querySelectorAll('.cmp').forEach((c) => (c.checked = true)); render(); });
+      document.getElementById('clr')?.addEventListener('click', () => { document.querySelectorAll('.cmp').forEach((c) => (c.checked = false)); render(); });
+      render();
+    </script>
+  </body>
+</html>

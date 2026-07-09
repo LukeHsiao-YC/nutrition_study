@@ -53,29 +53,31 @@ ALL_JOURNAL_QUERIES = {
     "ClinNutr": ('"Clinical nutrition (Edinburgh, Scotland)"[Journal]', "營養評估"),
     "AJCN": ('"The American journal of clinical nutrition"[Journal]', "營養評估"),
     "JPEN": ('"JPEN. Journal of parenteral and enteral nutrition"[Journal]', "營養評估"),
-    "JPGN": ('"Journal of pediatric gastroenterology and nutrition"[Journal]', "營養評估")
+    "JPGN": ('"Journal of pediatric gastroenterology and nutrition"[Journal]', "營養評估"),
+    # ── 擴充來源(2026-07,可自行增刪:格式 "簡稱": ('"期刊全名"[Journal]', "分類"))──
+    "Obesity": ('"Obesity (Silver Spring, Md.)"[Journal]', "兒童肥胖"),
+    "ChildObes": ('"Childhood obesity (Print)"[Journal]', "兒童肥胖"),
+    "JAMAPed": ('"JAMA pediatrics"[Journal]', "兒童肥胖"),
+    "Pediatrics": ('"Pediatrics"[Journal]', "兒童肥胖"),
+    "JAND": ('"Journal of the Academy of Nutrition and Dietetics"[Journal]', "營養衛教介入"),
+    "Nutrients": ('"Nutrients"[Journal]', "營養評估"),
+    "JNutr": ('"The Journal of nutrition"[Journal]', "營養評估"),
+    "EJCN": ('"European journal of clinical nutrition"[Journal]', "營養評估"),
+    "BJN": ('"The British journal of nutrition"[Journal]', "營養流行病學"),
+    "NutrRev": ('"Nutrition reviews"[Journal]', "營養流行病學"),
+    "MatChildHJ": ('"Maternal and child health journal"[Journal]', "社區營養"),
+    "BMCPH": ('"BMC public health"[Journal]', "社區營養"),
 }
 
 def get_today_batch():
+    """把所有期刊平均分成 3 組,依當天輪一組(不論期刊總數多少都能運作)。"""
     keys = list(ALL_JOURNAL_QUERIES.keys())
-    
-    batch_0 = keys[0:6]
-    batch_1 = keys[6:12]
-    batch_2 = keys[12:18]
-    
-    yday = datetime.now().timetuple().tm_yday
-    batch_index = yday % 3
-    
-    if batch_index == 0:
-        active_keys = batch_0
-        print("今日任務：執行第一組期刊 (兒童肥胖、部分營養衛教)")
-    elif batch_index == 1:
-        active_keys = batch_1
-        print("今日任務：執行第二組期刊 (部分營養衛教、社區營養)")
-    else:
-        active_keys = batch_2
-        print("今日任務：執行第三組期刊 (營養流行病學、營養評估)")
-        
+    n = len(keys)
+    batch_index = datetime.now().timetuple().tm_yday % 3
+    # 平均切成 3 組
+    active_keys = [k for i, k in enumerate(keys) if i % 3 == batch_index]
+    cats = sorted({ALL_JOURNAL_QUERIES[k][1] for k in active_keys})
+    print(f"今日任務：執行第 {batch_index + 1}/3 組期刊({len(active_keys)}/{n} 本;涵蓋 {', '.join(cats)})")
     return {k: ALL_JOURNAL_QUERIES[k] for k in active_keys}
 
 def fetch_pubmed_articles(journal_query, count=3):
