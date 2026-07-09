@@ -46,13 +46,13 @@
 1. **取得全文**
    - 自己上傳:把 PDF 丟進 `pdfs/`(此資料夾不進版控),然後:
      ```bash
-     python scripts/ingest.py upload            # 處理 pdfs/ 全部
-     python scripts/ingest.py upload path.pdf   # 指定單一檔
+     python3 scripts/ingest.py upload            # 處理 pdfs/ 全部
+     python3 scripts/ingest.py upload path.pdf   # 指定單一檔
      ```
      檔名建議用 PMID(如 `42401201.pdf`)。
    - 開放取用(免下載):
      ```bash
-     python scripts/ingest.py pmc 42401201      # 用 PMID 抓 PMC 全文
+     python3 scripts/ingest.py pmc 42401201     # 用 PMID 抓 PMC 全文
      ```
    會產生 `src/content/articles/<id>.md`,`depth: reading`,全文放在內文、DOI 經 Crossref 驗證。
 
@@ -68,7 +68,22 @@
 4. **產出**
    - 引用:詳情頁「複製 BibTeX」或下載 `.bib`/`.ris` → Zotero / Word / LaTeX
    - 投影片:對 Claude 說「把這篇做成投影片」(串 NotebookLM),
-     或離線:`python scripts/paper_to_marp.py src/content/articles/42401201.md`
+     或離線:`python3 scripts/paper_to_marp.py src/content/articles/42401201.md`
+
+### ⚡ 更省事:自動化這條流程
+
+不想一步步跑的話,有兩種一鍵/零接觸方式:
+
+- **`/process-pdfs`(推薦,免額外費用)**:把 PDF 丟進 `pdfs/`,在此資料夾開 Claude Code
+  打 `/process-pdfs`,會自動「進料 → 萃取第一/二層 → build → commit → push」。品質最佳。
+- **`autopilot.py`(真・零接觸,用 Gemini)**:需先設 `GEMINI_API_KEY`(export 或放 `.env`)。
+  ```bash
+  python3 scripts/autopilot.py --push     # 進料+Gemini 萃取+commit/push
+  python3 scripts/autopilot.py --watch     # 監看 pdfs/,丟檔即自動處理
+  ```
+  免打指令,但萃取品質略低、會用 Gemini 額度。
+
+兩種產出的第二層都仍是 `ai_draft`,最後由你到 `/admin/` 確認、填 `confirmed`。
 
 ### B. 手動加一篇(不經抓取)
 
