@@ -26,3 +26,7 @@ pdfs/*
 # secrets(以防萬一,API key 一律走 GitHub Secrets,不進 repo)
 .env
 .env.local
+
+# Python 快取
+__pycache__/
+*.pyc
