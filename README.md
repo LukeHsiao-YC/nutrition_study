@@ -140,6 +140,9 @@ scripts/
 
 autopilot 現在預設連 GRADE/spin 評讀一起跑;不想要加 --no-review。
 期刊來源在 scripts/fetch_papers.py 的 ALL_JOURNAL_QUERIES,一行一本可自行增刪。
+
+Zotero 每日排程:launchd 範本在 docs/zotero-sync.launchd.plist(每天 09:00 跑
+pull --process --push);安裝與管理見 docs/SETUP-ZOTERO.md。
 public/admin/          Decap CMS 後台
 oauth/worker.js        Decap OAuth 用的 Cloudflare Worker
 docs/                  SETUP-CMS.md / OBSIDIAN.md

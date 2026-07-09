@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Zotero 每日自動同步的 launchd 範本(macOS)。
+  安裝(換電腦時):把路徑改成你的專案與 python3,複製到 LaunchAgents 後載入:
+    cp docs/zotero-sync.launchd.plist ~/Library/LaunchAgents/com.nutrition-study.zotero-sync.plist
+    launchctl load -w ~/Library/LaunchAgents/com.nutrition-study.zotero-sync.plist
+  詳見 docs/SETUP-ZOTERO.md。
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.nutrition-study.zotero-sync</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>-lc</string>
+    <string>cd "/Users/kemenju/Desktop/研究所/論文截取整理系統/nutrition_study" &amp;&amp; /Library/Frameworks/Python.framework/Versions/3.13/bin/python3 scripts/zotero_sync.py pull --process --push</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>9</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+  <key>StandardOutPath</key>
+  <string>/tmp/zotero_sync.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/zotero_sync.err</string>
+</dict>
+</plist>

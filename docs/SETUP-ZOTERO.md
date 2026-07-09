@@ -35,16 +35,34 @@ python3 scripts/zotero_sync.py pull --process --push
 - `--process`:pull 進來後,自動用 Gemini 萃取第一/二層 + 跑 GRADE/spin 評讀(需 GEMINI_API_KEY)。
 - `--push`:完成後自動 build + commit + push,網站隨即更新。
 
-### 定時排程(真正零接觸)
-用 macOS 內建排程,讓它每天自動跑。編輯 crontab:
+### 定時排程(真正零接觸)— 用 launchd(macOS 建議)
+
+本專案已附排程檔 `~/Library/LaunchAgents/com.nutrition-study.zotero-sync.plist`
+(每天 09:00 執行 `zotero_sync.py pull --process --push`)。**已於 2026-07-09 安裝並實測跑通**
+(退出碼 0;Desktop 存取、osxkeychain 的 git push、build 皆正常)。
+
+**管理指令:**
 ```bash
-crontab -e
+launchctl list | grep nutrition          # 確認已排程
+launchctl start com.nutrition-study.zotero-sync   # 立刻手動跑一次
+tail -20 /tmp/zotero_sync.log            # 看紀錄(stderr 在 /tmp/zotero_sync.err)
+
+# 暫停 / 恢復
+launchctl unload ~/Library/LaunchAgents/com.nutrition-study.zotero-sync.plist
+launchctl load -w ~/Library/LaunchAgents/com.nutrition-study.zotero-sync.plist
 ```
-加一行(每天 08:00 執行;路徑換成你的專案):
-```
-0 8 * * * cd "/Users/kemenju/Desktop/研究所/論文截取整理系統/nutrition_study" && /usr/bin/python3 scripts/zotero_sync.py pull --process --push >> /tmp/zotero_sync.log 2>&1
-```
-之後你只要把論文丟進 Zotero,隔天它就自動進系統、長出研究卡、上線。
+**改時間**:編輯該 plist 的 `<key>Hour</key>` / `<key>Minute</key>`,再 unload + load 一次。
+
+之後你只要把論文丟進 Zotero,隔天早上它就自動進系統、長出研究卡、上線。
+
+**注意**:
+- Mac 要醒著且已登入才會跑;9:00 在睡眠中,launchd 會在下次喚醒補跑。
+- 首次執行若 macOS 跳權限視窗(存取桌面/檔案),按「允許」即可。
+- plist 在使用者家目錄、非專案內,不進版控(換電腦需重新安裝一次)。
+
+> crontab 替代方案:也可用 `crontab -e` 加
+> `0 9 * * * cd "<專案>" && /Library/Frameworks/Python.framework/Versions/3.13/bin/python3 scripts/zotero_sync.py pull --process --push >> /tmp/zotero_sync.log 2>&1`,
+> 但 macOS 需先到「系統設定 → 隱私權與安全性 → 完全取得磁碟權限」把 `cron` 加入,較麻煩,故建議用上面的 launchd。
 
 ## 運作方式與限制
 
