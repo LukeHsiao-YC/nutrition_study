@@ -48,13 +48,28 @@ def get_model():
     key = os.environ.get("GEMINI_API_KEY")
     if not key:
         sys.exit("✗ 找不到 GEMINI_API_KEY。請 export GEMINI_API_KEY=... 或寫進專案根目錄 .env")
-    genai.configure(api_key=key)
-    for name in ("gemini-1.5-flash", "gemini-1.5-pro"):
-        try:
+    # transport='rest' 繞過 gRPC(避免背景輪詢/fork 情境下卡住)
+    genai.configure(api_key=key, transport="rest")
+
+    # 動態挑選可用的 flash 模型(避開已淘汰的 1.5、以及 image/tts/preview 等特殊版)
+    preferred = ("gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.5-flash-lite",
+                 "gemini-2.0-flash-lite")
+    try:
+        avail = {
+            m.name.replace("models/", "")
+            for m in genai.list_models()
+            if "generateContent" in m.supported_generation_methods
+        }
+    except Exception:
+        avail = set()
+    for name in preferred:
+        if name in avail:
             return genai.GenerativeModel(name)
-        except Exception:
-            continue
-    return genai.GenerativeModel("gemini-1.5-flash")
+    # 退而求其次:任何一般 flash(排除 image/tts/preview/exp)
+    for name in sorted(avail):
+        if "flash" in name and not any(x in name for x in ("image", "tts", "preview", "exp")):
+            return genai.GenerativeModel(name)
+    sys.exit("✗ 找不到可用的 Gemini flash 模型,請檢查金鑰權限。")
 
 
 # ── 找出待萃取文章:depth=reading 且第二層 pico.ai_draft 還空著 ──
