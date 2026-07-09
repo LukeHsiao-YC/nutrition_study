@@ -150,10 +150,36 @@ def push(push_all=False):
 
 
 # ── pull ──
+import urllib.parse
+import ingest  # 重用 write_article / pmid_to_pmcid
+
+
+def resolve_pmid(doi):
+    """用 DOI 反查 PubMed PMID(Zotero 項目常無 PMID 時補上)。"""
+    try:
+        url = ("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed"
+               f"&term={urllib.parse.quote(doi)}[DOI]&retmode=json")
+        req = urllib.request.Request(url, headers={"User-Agent": "nutrition-study"})
+        with urllib.request.urlopen(req, context=_SSL_CTX) as r:
+            ids = json.loads(r.read()).get("esearchresult", {}).get("idlist", [])
+        return ids[0] if ids else ""
+    except Exception:
+        return ""
+
+
+def author_strings(creators):
+    out = []
+    for c in creators or []:
+        nm = " ".join(x for x in [c.get("firstName"), c.get("lastName")] if x)
+        if nm:
+            out.append(nm)
+    return out
+
+
 def pull():
     key, uid, coll = cfg()
     path = f"/users/{uid}/collections/{coll}/items/top" if coll else f"/users/{uid}/items/top"
-    local_dois = {(fm.get("doi") or "").lower() for _, fm in local_articles()}
+    local_dois = {(fm.get("doi") or "").lower() for _, fm in local_articles() if fm.get("doi")}
     start, imported = 0, 0
     while True:
         items = zreq("GET", f"{path}?format=json&limit=100&start={start}", key)
@@ -161,22 +187,40 @@ def pull():
             break
         for it in items:
             d = it.get("data", {})
+            if d.get("itemType") not in ("journalArticle", "conferencePaper", "preprint", None):
+                continue
             doi = (d.get("DOI") or "").lower().strip()
-            extra = d.get("extra", "") or ""
-            pm = re.search(r"PMID:\s*(\d+)", extra)
-            pmid = pm.group(1) if pm else ""
             if doi and doi in local_dois:
                 continue
-            if pmid:
-                print(f"  ← 匯入 PMID {pmid}(抓 PMC 全文)")
+            pm = re.search(r"PMID:\s*(\d+)", d.get("extra", "") or "")
+            pmid = pm.group(1) if pm else (resolve_pmid(doi) if doi else "")
+
+            title = d.get("title", "")[:50]
+            # 有 PMID 且屬 PMC 開放取用 → 抓全文
+            if pmid and ingest.pmid_to_pmcid(pmid):
+                print(f"  ← {title}… → PMID {pmid} 有 PMC 全文,抓取中")
                 subprocess.run(["python3", "scripts/ingest.py", "pmc", pmid], check=False)
                 imported += 1
-            elif doi:
-                print(f"  ← Zotero 有 DOI {doi} 但無 PMID/全文,略過(請手動上傳 PDF 後 ingest)")
+                continue
+            # 否則建一張書目卡(待你上傳 PDF)
+            ym = re.search(r"\d{4}", d.get("date", ""))
+            meta = {
+                "title": d.get("title", ""), "journal": d.get("publicationTitle", ""),
+                "pubDate": ym.group(0) if ym else d.get("date", ""),
+                "doi": d.get("DOI", ""), "pmid": pmid,
+                "link": d.get("url", ""), "fulltext_source": "none",
+                "tags": [t["tag"] for t in d.get("tags", [])],
+                "authors": author_strings(d.get("creators")),
+            }
+            slug = pmid if pmid else ingest._slugify(d.get("title", "untitled"))
+            r = ingest.write_article(meta, "(從 Zotero 匯入,尚無全文——請把 PDF 丟進 pdfs/ 再 ingest upload)", slug)
+            if r:
+                print(f"  ← {title}… → 已建書目卡(待補全文)")
+                imported += 1
         if len(items) < 100:
             break
         start += 100
-    print(f"✔ 從 Zotero 匯入 {imported} 篇。")
+    print(f"✔ 從 Zotero 匯入/更新 {imported} 篇。")
 
 
 def main():
