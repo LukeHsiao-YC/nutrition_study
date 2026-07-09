@@ -27,6 +27,25 @@ python3 scripts/zotero_sync.py pull     # Zotero → 本地
 python3 scripts/zotero_sync.py sync     # 先 pull 再 push
 ```
 
+## 全自動(pull → 萃取 → 評讀 → 推上線)
+
+```bash
+python3 scripts/zotero_sync.py pull --process --push
+```
+- `--process`:pull 進來後,自動用 Gemini 萃取第一/二層 + 跑 GRADE/spin 評讀(需 GEMINI_API_KEY)。
+- `--push`:完成後自動 build + commit + push,網站隨即更新。
+
+### 定時排程(真正零接觸)
+用 macOS 內建排程,讓它每天自動跑。編輯 crontab:
+```bash
+crontab -e
+```
+加一行(每天 08:00 執行;路徑換成你的專案):
+```
+0 8 * * * cd "/Users/kemenju/Desktop/研究所/論文截取整理系統/nutrition_study" && /usr/bin/python3 scripts/zotero_sync.py pull --process --push >> /tmp/zotero_sync.log 2>&1
+```
+之後你只要把論文丟進 Zotero,隔天它就自動進系統、長出研究卡、上線。
+
 ## 運作方式與限制
 
 - **去重以 DOI 為準**:兩邊已有相同 DOI 就不重建。
