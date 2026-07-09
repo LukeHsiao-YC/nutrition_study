@@ -109,6 +109,24 @@ collections:
         fields:
           - { label: AI 草稿, name: ai_draft, widget: text, required: false }
           - { label: ✅ 我的確認, name: confirmed, widget: text, required: false }
+      - label: GRADE 證據等級
+        name: grade
+        widget: object
+        required: false
+        collapsed: false
+        fields:
+          - { label: 證據等級, name: certainty, widget: select, required: false, options: ["", "Very low", "Low", "Moderate", "High"] }
+          - { label: AI 草稿(五面向理由), name: ai_draft, widget: text, required: false }
+          - { label: ✅ 我的確認, name: confirmed, widget: text, required: false }
+      - label: 論證 / Spin 稽核
+        name: spin
+        widget: object
+        required: false
+        collapsed: false
+        fields:
+          - { label: AI 草稿(過度推論), name: ai_draft, widget: text, required: false }
+          - { label: ✅ 我的確認, name: confirmed, widget: text, required: false }
+      - { label: 引用驗證摘要, name: ref_check, widget: string, required: false }
 
       # ── 關聯與個人 ──
       - { label: 關聯論文(PMID), name: related, widget: list, required: false }

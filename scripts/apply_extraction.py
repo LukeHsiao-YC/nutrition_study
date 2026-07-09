@@ -23,7 +23,7 @@ import sys
 
 # 第一層純量欄位(頂層 key: "value")
 SCALAR_KEYS = ["study_design", "sample_size", "inclusion", "exclusion",
-               "limitations_stated", "funding", "coi"]
+               "limitations_stated", "funding", "coi", "ref_check"]
 # 陣列欄位(頂層 key: [ ... ] 單行)
 LIST_KEYS = ["instruments", "statistics", "tags"]
 # 第二層:JSON 鍵 → (父區塊, 子鍵)
@@ -33,6 +33,10 @@ NESTED = {
     "gap": ("gap", "ai_draft"),
     "rob": ("rob", "ai_draft"),
     "rob_tool": ("rob", "tool"),
+    # Phase 6
+    "grade": ("grade", "ai_draft"),
+    "grade_certainty": ("grade", "certainty"),
+    "spin": ("spin", "ai_draft"),
 }
 
 
@@ -83,7 +87,7 @@ def apply(fm_lines, data):
                 continue
 
         # 第二層子鍵(縮排兩格),依 parent 決定要不要更新
-        sub = re.match(r"^  (ai_draft|tool):\s", stripped)
+        sub = re.match(r"^  (ai_draft|tool|certainty):\s", stripped)
         if sub and parent:
             child = sub.group(1)
             # 找出對應此 (parent, child) 的 JSON 鍵

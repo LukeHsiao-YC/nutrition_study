@@ -22,6 +22,15 @@ function robLevel(d) {
   const r = d.rob || {};
   return (r.confirmed || r.ai_draft || '').trim();
 }
+function gradeStyle(c) {
+  switch (c) {
+    case 'High': return 'background:#c6f6d5;color:#276749;';
+    case 'Moderate': return 'background:#bee3f8;color:#2c5282;';
+    case 'Low': return 'background:#feebc8;color:#c05621;';
+    case 'Very low': return 'background:#fed7d7;color:#c53030;';
+    default: return 'background:#edf2f7;color:#a0aec0;';
+  }
+}
 ---
 
 <html lang="zh-TW">
@@ -51,7 +60,8 @@ function robLevel(d) {
                 <th style="padding:9px 12px;">標題</th>
                 <th style="padding:9px 12px; white-space:nowrap;">研究設計</th>
                 <th style="padding:9px 12px; white-space:nowrap;">樣本數</th>
-                <th style="padding:9px 12px; white-space:nowrap;">證據評估</th>
+                <th style="padding:9px 12px; white-space:nowrap;">RoB 工具</th>
+                <th style="padding:9px 12px; white-space:nowrap;">GRADE</th>
                 <th style="padding:9px 12px;">核心發現</th>
                 <th style="padding:9px 12px; white-space:nowrap;">狀態</th>
               </tr>
@@ -66,6 +76,9 @@ function robLevel(d) {
                   <td style="padding:9px 12px;">{a.data.study_design || '—'}</td>
                   <td style="padding:9px 12px;">{a.data.sample_size || '—'}</td>
                   <td style="padding:9px 12px;">{a.data.rob?.tool ? <span>{a.data.rob.tool}</span> : '—'}</td>
+                  <td style="padding:9px 12px; white-space:nowrap;">{a.data.grade?.certainty
+                    ? <span style={`font-size:0.72rem; font-weight:bold; padding:2px 8px; border-radius:5px; ${gradeStyle(a.data.grade.certainty)}`}>{a.data.grade.certainty}</span>
+                    : '—'}</td>
                   <td style="padding:9px 12px; color:#4a5568;">{shortFinding(a.data) || '—'}</td>
                   <td style="padding:9px 12px; white-space:nowrap;">
                     {pending(a.data)

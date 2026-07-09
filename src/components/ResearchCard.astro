@@ -33,6 +33,21 @@ const robConfirmed = (data.rob?.confirmed || '').trim();
 const robDraft = (data.rob?.ai_draft || '').trim();
 const robTool = (data.rob?.tool || '').trim();
 const hasRob = robConfirmed || robDraft || robTool;
+
+// Phase 6:GRADE / spin / 引用驗證
+const gradeCertainty = (data.grade?.certainty || '').trim();
+const gradeText = (data.grade?.confirmed || data.grade?.ai_draft || '').trim();
+const spinPair = pair(data.spin);
+const refCheck = (data.ref_check || '').trim();
+function gradeStyle(c) {
+  switch (c) {
+    case 'High': return 'background:#c6f6d5;color:#276749;';
+    case 'Moderate': return 'background:#bee3f8;color:#2c5282;';
+    case 'Low': return 'background:#feebc8;color:#c05621;';
+    case 'Very low': return 'background:#fed7d7;color:#c53030;';
+    default: return 'background:#edf2f7;color:#4a5568;';
+  }
+}
 ---
 
 <div style="border:1px solid #d6dee8; border-radius:10px; padding:18px; background:#fff; margin-bottom:20px;">
@@ -84,6 +99,44 @@ const hasRob = robConfirmed || robDraft || robTool;
           {robConfirmed || robDraft}
         </div>
       )}
+    </div>
+  )}
+
+  {(gradeCertainty || gradeText || spinPair || refCheck) && (
+    <h3 style="margin:16px 0 10px; color:#2c5282; font-size:1rem;">🔬 批判性評讀(paper-review)</h3>
+  )}
+
+  {(gradeCertainty || gradeText) && (
+    <div style="margin-bottom:12px;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+        <strong style="color:#2d3748; font-size:0.9rem;">GRADE 證據等級</strong>
+        {gradeCertainty && <span style={`font-size:0.75rem; font-weight:bold; padding:2px 9px; border-radius:5px; ${gradeStyle(gradeCertainty)}`}>{gradeCertainty}</span>}
+      </div>
+      {gradeText && (
+        <div style="font-size:0.9rem; line-height:1.65; padding:8px 12px; border-radius:6px; border-left:3px solid #4299e1; background:#ebf8ff; color:#2d3748;">
+          {gradeText}
+        </div>
+      )}
+    </div>
+  )}
+
+  {spinPair && (
+    <div style="margin-bottom:12px;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+        <strong style="color:#2d3748; font-size:0.9rem;">⚠️ 論證 / Spin 稽核</strong>
+        {spinPair.done
+          ? <span style="font-size:0.7rem; background:#c6f6d5; color:#276749; padding:1px 7px; border-radius:5px;">✓ 已確認</span>
+          : <span style="font-size:0.7rem; background:#fed7d7; color:#c53030; padding:1px 7px; border-radius:5px;">待確認</span>}
+      </div>
+      <div style={`font-size:0.9rem; line-height:1.65; padding:8px 12px; border-radius:6px; border-left:3px solid ${spinPair.done ? '#38a169' : '#dd6b20'}; background:${spinPair.done ? '#f0fff4' : '#fffaf0'}; color:#2d3748;`}>
+        {spinPair.done ? spinPair.confirmed : spinPair.draft}
+      </div>
+    </div>
+  )}
+
+  {refCheck && (
+    <div style="margin-bottom:8px; font-size:0.85rem; color:#4a5568;">
+      <strong>📎 引用驗證:</strong>{refCheck}
     </div>
   )}
 

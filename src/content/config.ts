@@ -55,6 +55,21 @@ const articlesCollection = defineCollection({
     key_findings: draftPair,
     gap: draftPair,
 
+    // ── Phase 6:批判性評讀 ──
+    // GRADE 證據等級(certainty 由 grade_judge.py 確定性算出)
+    grade: z
+      .object({
+        certainty: z.string().optional().default(''), // Very low / Low / Moderate / High
+        ai_draft: z.string().optional().default(''),
+        confirmed: z.string().optional().default(''),
+      })
+      .optional()
+      .default({ certainty: '', ai_draft: '', confirmed: '' }),
+    // 論證/spin 稽核(argdown_lint.py 抓到的過度推論)
+    spin: draftPair,
+    // 引用清單 CrossRef 存在性驗證摘要
+    ref_check: z.string().optional().default(''),
+
     // ── 關聯與個人筆記 ──
     related: z.array(z.string()).optional().default([]), // 以 pmid 互連
     my_notes: z.string().optional().default(''),

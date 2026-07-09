@@ -129,8 +129,12 @@ src/
   lib/cite.ts          BibTeX / RIS 產生器
   pages/               首頁 / 深讀庫 / 每週彙整 / 詳情頁 / 匯出 / RSS
 .claude/skills/
-  extract-paper/       萃取 skill(第一/二層)
+  extract-paper/       萃取 skill(第一/二層 + 自我測驗卡)
+  paper-review/        批判性評讀 skill(GRADE + spin + 引用驗證)
   paper-to-slides/     投影片 skill(串 notebooklm-research)
+scripts/
+  grade_judge.py       確定性計算 GRADE 證據等級(LLM 評級 → 程式重算)
+  argdown_lint.py      確定性抓過度推論 / spin
 public/admin/          Decap CMS 後台
 oauth/worker.js        Decap OAuth 用的 Cloudflare Worker
 docs/                  SETUP-CMS.md / OBSIDIAN.md

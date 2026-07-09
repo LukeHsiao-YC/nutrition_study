@@ -159,6 +159,14 @@ key_findings:
 gap:
   ai_draft: ""
   confirmed: ""
+grade:
+  certainty: ""
+  ai_draft: ""
+  confirmed: ""
+spin:
+  ai_draft: ""
+  confirmed: ""
+ref_check: ""
 related: []
 my_notes: ""
 ---

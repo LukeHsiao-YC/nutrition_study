@@ -32,6 +32,14 @@ key_findings:
 gap:
   ai_draft: "關於肥胖者重要的結果和亞組分析仍存在一些空白。巨量營養素組成對兒童和青少年身體組成的影響證據有限，且不同巨量營養素分佈飲食的長期效果尚不明確，需進一步研究。飲食療法或醫療營養療法的長期干預有待加強。數位干預中哪些組件最有效、對哪些人有效以及如何最好地維持效果，尚需更多研究。此外，對其他食物和健康飲食模式在兒童肥胖治療中的研究也缺乏。未來研究應更詳細報告共病症和整體健康狀況，並系統性報告飲食療法的有效性和安全性，以及詳細描述關鍵干預技術。"
   confirmed: ""
+grade:
+  certainty: "Very low"
+  ai_draft: "GRADE(主結果:飲食作為多組分生活型態介入以降低 BMI):起始 High(RCT 統合分析),risk_of_bias、inconsistency、imprecision 各評 serious → 降 3 級 = Very low。註:直覺評 Low,但依 grade_judge.py 算術以 Very low 為準(底層證據多為低/極低品質、異質性高、效果量小)。"
+  confirmed: ""
+spin:
+  ai_draft: "argdown_lint 稽核:①『適度減少能量攝取+均衡飲食對兒童青少年肥胖有效』有 RCT 統合支撐,無過度推論;②『無熱量飲料替代含糖飲料可減少體脂百分比』僅單一/有限研究卻下 benefit 結論——過度推論(benefit 缺 direct_rct 支撐),引用時應謹慎。"
+  confirmed: ""
+ref_check: "本次未抽驗引用清單(可日後補做 CrossRef 存在性驗證)"
 related: []
 my_notes: ""
 ---

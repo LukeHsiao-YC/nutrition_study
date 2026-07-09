@@ -45,6 +45,16 @@ gap:
   ai_draft: ""
   confirmed: ""
 
+# ── Phase 6:批判性評讀(paper-review skill 產生)──
+grade:
+  certainty: ""             # Very low / Low / Moderate / High(由 grade_judge.py 算)
+  ai_draft: ""              # GRADE 五面向理由
+  confirmed: ""
+spin:
+  ai_draft: ""              # argdown_lint.py 抓到的過度推論
+  confirmed: ""
+ref_check: ""               # 引用清單 CrossRef 驗證摘要
+
 # ── 關聯與個人筆記 ──
 related: []                 # 相關論文的 pmid,如 ["42401201"]
 my_notes: ""                # 個人評語 / 延伸想法
