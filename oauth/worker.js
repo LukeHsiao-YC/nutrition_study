@@ -46,21 +46,23 @@ export default {
         }),
       });
       const data = await tokenRes.json();
-
       const ok = !!data.access_token;
-      const status = ok ? 'success' : 'error';
-      const payload = ok
-        ? { token: data.access_token, provider: PROVIDER }
-        : { error: data.error_description || data.error || 'no token' };
-      const message = `authorization:${PROVIDER}:${status}:${JSON.stringify(payload)}`;
 
-      // 失敗時把 GitHub 回傳的原因顯示在畫面上,方便診斷(成功時 Decap 會自動關閉此視窗)
-      const diag = ok
-        ? '登入成功,視窗即將關閉…'
-        : '❌ 換 token 失敗:' + (data.error_description || data.error || JSON.stringify(data));
+      // 失敗:不 postMessage、不讓 Decap 關掉視窗,把原因大大地留在畫面上供診斷
+      if (!ok) {
+        const errHtml = `<!doctype html><html><body style="font-family:sans-serif;padding:32px;line-height:1.6;">
+<h2 style="color:#c53030;">❌ 換 token 失敗</h2>
+<p>GitHub 回傳:</p>
+<pre style="background:#f7fafc;border:1px solid #e2e8f0;padding:12px;border-radius:6px;white-space:pre-wrap;">${JSON.stringify(data, null, 2)}</pre>
+<p>把上面這段整個複製給協助你的人。此視窗<strong>不會自動關閉</strong>。</p>
+</body></html>`;
+        return new Response(errHtml, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+      }
 
+      // 成功:走 Decap 握手,自動關閉並登入
+      const message = `authorization:${PROVIDER}:success:${JSON.stringify({ token: data.access_token, provider: PROVIDER })}`;
       const html = `<!doctype html><html><body style="font-family:sans-serif;padding:24px;">
-<p>${diag}</p>
+<p>登入成功,視窗即將關閉…</p>
 <script>
 (function () {
   function receiveMessage(e) {
