@@ -1,0 +1,87 @@
+<svg width="860" viewBox="0 0 860 560" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>營養研究文獻平台操作流程(詳細版)</title>
+<desc>從三種進料來源進入系統,系統自動取全文、萃取研究卡、批判性評讀,由你在後台確認後,產出深讀庫、引用與投影片。圖上標註每步的網址與指令。</desc>
+<style>
+text{font-family:-apple-system,"Helvetica Neue",Arial,"PingFang TC","Microsoft JhengHei",sans-serif;}
+.ti{font-size:14px;font-weight:500;}
+.su{font-size:12px;}
+.co{font-size:11px;font-family:"SF Mono",Menlo,Consolas,monospace;}
+.sec{font-size:12px;font-weight:500;fill:#5F5E5A;}
+.hd{font-size:19px;font-weight:500;fill:#2C2C2A;}
+.hs{font-size:12px;fill:#5F5E5A;font-family:"SF Mono",Menlo,monospace;}
+.lg{font-size:12px;fill:#444441;}
+.bx{stroke-width:1.5;}
+</style>
+<defs>
+<marker id="ar" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#888780"/></marker>
+</defs>
+<rect x="1" y="1" width="858" height="558" rx="14" fill="#FCFCFA" stroke="#E8E6DE"/>
+
+<text class="hd" x="430" y="34" text-anchor="middle">營養研究文獻平台 · 操作流程</text>
+<text class="hs" x="430" y="54" text-anchor="middle">lukehsiao-yc.github.io/nutrition_study</text>
+
+<text class="sec" x="30" y="86" text-anchor="start">① 論文從哪進來(三選一)</text>
+<rect class="bx" x="30" y="94" width="250" height="70" rx="6" fill="#E1F5EE" stroke="#0F6E56"/>
+<text class="ti" x="155" y="118" text-anchor="middle" fill="#04342C">每天自動抓期刊</text>
+<text class="su" x="155" y="136" text-anchor="middle" fill="#0F6E56">30 本 · 你不用動作</text>
+<text class="co" x="155" y="154" text-anchor="middle" fill="#0F6E56">看首頁 /</text>
+<rect class="bx" x="305" y="94" width="250" height="70" rx="6" fill="#E1F5EE" stroke="#0F6E56"/>
+<text class="ti" x="430" y="118" text-anchor="middle" fill="#04342C">上傳 PDF</text>
+<text class="su" x="430" y="136" text-anchor="middle" fill="#0F6E56">放進 pdfs/ 資料夾</text>
+<text class="co" x="430" y="154" text-anchor="middle" fill="#0F6E56">指令 /process-pdfs</text>
+<rect class="bx" x="580" y="94" width="250" height="70" rx="6" fill="#E1F5EE" stroke="#0F6E56"/>
+<text class="ti" x="705" y="118" text-anchor="middle" fill="#04342C">存進 Zotero(推薦)</text>
+<text class="su" x="705" y="136" text-anchor="middle" fill="#0F6E56">最省事</text>
+<text class="co" x="705" y="154" text-anchor="middle" fill="#0F6E56">每天 09:00 自動同步</text>
+
+<line x1="430" y1="166" x2="430" y2="204" stroke="#888780" stroke-width="2" marker-end="url(#ar)"/>
+
+<text class="sec" x="30" y="200" text-anchor="start">② 系統全自動處理(你完全不用碰)</text>
+<rect class="bx" x="30" y="210" width="250" height="70" rx="6" fill="#EEEDFE" stroke="#534AB7"/>
+<text class="ti" x="155" y="234" text-anchor="middle" fill="#26215C">取全文 + 驗 DOI</text>
+<text class="su" x="155" y="252" text-anchor="middle" fill="#534AB7">markitdown + Crossref</text>
+<text class="co" x="155" y="270" text-anchor="middle" fill="#534AB7">scripts/ingest.py</text>
+<rect class="bx" x="305" y="210" width="250" height="70" rx="6" fill="#EEEDFE" stroke="#534AB7"/>
+<text class="ti" x="430" y="234" text-anchor="middle" fill="#26215C">AI 萃取研究卡</text>
+<text class="su" x="430" y="252" text-anchor="middle" fill="#534AB7">設計 / 樣本 / 發現 / PICO</text>
+<text class="co" x="430" y="270" text-anchor="middle" fill="#534AB7">skill: extract-paper</text>
+<rect class="bx" x="580" y="210" width="250" height="70" rx="6" fill="#EEEDFE" stroke="#534AB7"/>
+<text class="ti" x="705" y="234" text-anchor="middle" fill="#26215C">批判性評讀</text>
+<text class="su" x="705" y="252" text-anchor="middle" fill="#534AB7">GRADE 等級 + 抓 spin</text>
+<text class="co" x="705" y="270" text-anchor="middle" fill="#534AB7">skill: paper-review</text>
+<line x1="280" y1="245" x2="303" y2="245" stroke="#888780" stroke-width="2" marker-end="url(#ar)"/>
+<line x1="555" y1="245" x2="578" y2="245" stroke="#888780" stroke-width="2" marker-end="url(#ar)"/>
+
+<line x1="430" y1="282" x2="430" y2="320" stroke="#888780" stroke-width="2" marker-end="url(#ar)"/>
+
+<text class="sec" x="30" y="316" text-anchor="start">③ 只有這一步要你動手</text>
+<rect class="bx" x="180" y="326" width="500" height="66" rx="6" fill="#FAEEDA" stroke="#854F0B"/>
+<text class="ti" x="430" y="350" text-anchor="middle" fill="#412402">你確認草稿並補充想法</text>
+<text class="su" x="430" y="368" text-anchor="middle" fill="#854F0B">把紅色「待確認」改成綠色「已確認」</text>
+<text class="co" x="430" y="385" text-anchor="middle" fill="#854F0B">後台 /admin/(GitHub 登入)或 Obsidian</text>
+
+<line x1="430" y1="394" x2="430" y2="432" stroke="#888780" stroke-width="2" marker-end="url(#ar)"/>
+
+<text class="sec" x="30" y="428" text-anchor="start">④ 拿來用</text>
+<rect class="bx" x="30" y="438" width="250" height="70" rx="6" fill="#EAF3DE" stroke="#3B6D11"/>
+<text class="ti" x="155" y="462" text-anchor="middle" fill="#173404">深讀庫 · 並排比較</text>
+<text class="su" x="155" y="480" text-anchor="middle" fill="#3B6D11">文獻矩陣 + 勾選對照</text>
+<text class="co" x="155" y="498" text-anchor="middle" fill="#3B6D11">/deepread · /compare</text>
+<rect class="bx" x="305" y="438" width="250" height="70" rx="6" fill="#EAF3DE" stroke="#3B6D11"/>
+<text class="ti" x="430" y="462" text-anchor="middle" fill="#173404">匯出引用</text>
+<text class="su" x="430" y="480" text-anchor="middle" fill="#3B6D11">一鍵 BibTeX / RIS</text>
+<text class="co" x="430" y="498" text-anchor="middle" fill="#3B6D11">/library.bib → Zotero</text>
+<rect class="bx" x="580" y="438" width="250" height="70" rx="6" fill="#EAF3DE" stroke="#3B6D11"/>
+<text class="ti" x="705" y="462" text-anchor="middle" fill="#173404">做投影片</text>
+<text class="su" x="705" y="480" text-anchor="middle" fill="#3B6D11">NotebookLM 或 Marp</text>
+<text class="co" x="705" y="498" text-anchor="middle" fill="#3B6D11">skill: paper-to-slides</text>
+
+<rect x="150" y="528" width="12" height="12" rx="3" fill="#E1F5EE" stroke="#0F6E56"/>
+<text class="lg" x="168" y="538" text-anchor="start">進料</text>
+<rect x="280" y="528" width="12" height="12" rx="3" fill="#EEEDFE" stroke="#534AB7"/>
+<text class="lg" x="298" y="538" text-anchor="start">系統自動</text>
+<rect x="440" y="528" width="12" height="12" rx="3" fill="#FAEEDA" stroke="#854F0B"/>
+<text class="lg" x="458" y="538" text-anchor="start">你要做</text>
+<rect x="580" y="528" width="12" height="12" rx="3" fill="#EAF3DE" stroke="#3B6D11"/>
+<text class="lg" x="598" y="538" text-anchor="start">產出應用</text>
+</svg>

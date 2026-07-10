@@ -3,6 +3,8 @@
 從各大期刊定期抓取最新論文,做成**論文整理 / 研究撰寫 / 簡報製作 / 學術資料庫**的一站式工作流。
 線上網址:<https://lukehsiao-yc.github.io/nutrition_study/>
 
+![操作流程圖](docs/workflow.svg)
+
 ---
 
 ## 這套系統怎麼運作(全貌)
