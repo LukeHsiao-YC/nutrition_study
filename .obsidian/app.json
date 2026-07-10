@@ -1,0 +1,14 @@
+{
+  "userIgnoreFilters": [
+    "node_modules/",
+    "dist/",
+    ".astro/",
+    ".git/",
+    "pdfs/",
+    "docs/"
+  ],
+  "alwaysUpdateLinks": true,
+  "newFileLocation": "folder",
+  "newFileFolderPath": "notes",
+  "attachmentFolderPath": "notes/attachments"
+}
