@@ -35,6 +35,7 @@ except Exception:
 ARTICLES_DIR = "src/content/articles"
 PDF_DIR = "pdfs"
 UA = {"User-Agent": "nutrition-study-ingest/1.0 (mailto:u9602041@gmail.com)"}
+UNPAYWALL_EMAIL = os.environ.get("UNPAYWALL_EMAIL", "u9602041@gmail.com")
 
 DOI_RE = re.compile(r"10\.\d{4,9}/[-._;()/:A-Za-z0-9]+", re.I)
 
@@ -286,6 +287,72 @@ def cmd_pmc(pmid):
     write_article(meta, fulltext, pmid)
 
 
+# ──────────────────── OA 全文下載(paper-fetch 的「路徑階梯」第 ① 層)────────────────────
+def _download_pdf(url, dest):
+    """下載並驗 %PDF magic bytes(不信 Content-Type;付費牆常回假的 200 html)。"""
+    try:
+        req = urllib.request.Request(url, headers={
+            "User-Agent": "Mozilla/5.0", "Accept": "application/pdf,*/*"})
+        with urllib.request.urlopen(req, timeout=45, context=_SSL_CTX) as r:
+            data = r.read()
+    except Exception:
+        return False
+    if not data[:5].startswith(b"%PDF"):
+        return False
+    with open(dest, "wb") as f:
+        f.write(data)
+    return True
+
+
+def _oa_pdf_urls(doi):
+    """收集開放取用 PDF 候選連結:Unpaywall + Semantic Scholar。"""
+    urls = []
+    try:
+        u = _get(f"https://api.unpaywall.org/v2/{urllib.parse.quote(doi)}?email={UNPAYWALL_EMAIL}")
+        for loc in [u.get("best_oa_location")] + (u.get("oa_locations") or []):
+            if loc and loc.get("url_for_pdf"):
+                urls.append(loc["url_for_pdf"])
+    except Exception:
+        pass
+    try:
+        s = _get("https://api.semanticscholar.org/graph/v1/paper/"
+                 f"DOI:{urllib.parse.quote(doi)}?fields=openAccessPdf")
+        if s.get("openAccessPdf") and s["openAccessPdf"].get("url"):
+            urls.append(s["openAccessPdf"]["url"])
+    except Exception:
+        pass
+    seen, out = set(), []
+    for x in urls:
+        if x and x not in seen:
+            seen.add(x)
+            out.append(x)
+    return out
+
+
+def fetch_oa_pdf(doi):
+    """給 DOI,依序試各 OA 連結,抓到合法 PDF 就存進 pdfs/ 並回傳路徑;失敗回 None。"""
+    doi = doi.strip().rstrip(".")
+    os.makedirs(PDF_DIR, exist_ok=True)
+    dest = os.path.join(PDF_DIR, _slugify(doi.replace("/", "_")) + ".pdf")
+    for url in _oa_pdf_urls(doi):
+        print(f"  試抓:{url[:72]}…")
+        if _download_pdf(url, dest):
+            print(f"  ✓ 取得開放取用 PDF:{dest}")
+            return dest
+    return None
+
+
+# ────────────────────────────── 指令:fetch ──────────────────────────────
+def cmd_fetch(doi):
+    print(f"DOI {doi} → 找開放取用全文…")
+    path = fetch_oa_pdf(doi)
+    if not path:
+        print("  ✗ 找不到合法的開放取用 PDF(這篇可能是付費論文)。")
+        print("    → 手動下載 PDF 丟進 pdfs/ 再 `ingest upload`,或用機構代理(見 docs/SETUP-FULLTEXT.md)。")
+        return
+    cmd_upload([path])  # 轉全文 + Crossref 驗證 + 建文章
+
+
 # ────────────────────────────── 指令:doi ──────────────────────────────
 def cmd_doi(doi):
     cr = crossref_lookup(doi)
@@ -302,6 +369,8 @@ def main():
     p_up.add_argument("paths", nargs="*", help="指定 PDF 路徑,省略則掃 pdfs/")
     p_pmc = sub.add_parser("pmc", help="用 PMID 抓 PMC 開放全文")
     p_pmc.add_argument("pmid")
+    p_fetch = sub.add_parser("fetch", help="給 DOI 自動抓開放取用 PDF 並進料")
+    p_fetch.add_argument("doi")
     p_doi = sub.add_parser("doi", help="只驗證/查詢一個 DOI")
     p_doi.add_argument("doi")
     args = ap.parse_args()
@@ -310,6 +379,8 @@ def main():
         cmd_upload(args.paths)
     elif args.cmd == "pmc":
         cmd_pmc(args.pmid)
+    elif args.cmd == "fetch":
+        cmd_fetch(args.doi)
     elif args.cmd == "doi":
         cmd_doi(args.doi)
 

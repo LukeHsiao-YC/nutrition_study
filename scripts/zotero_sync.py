@@ -204,6 +204,14 @@ def pull():
                 subprocess.run(["python3", "scripts/ingest.py", "pmc", pmid], check=False)
                 imported += 1
                 continue
+            # 非 PMC:用 DOI 試抓開放取用 PDF(Unpaywall/S2)→ markitdown 進料
+            if doi:
+                pdf = ingest.fetch_oa_pdf(doi)
+                if pdf:
+                    print(f"  ← {title}… → 抓到開放取用 PDF,轉檔中")
+                    ingest.cmd_upload([pdf])
+                    imported += 1
+                    continue
             # 否則建一張書目卡(待你上傳 PDF)
             ym = re.search(r"\d{4}", d.get("date", ""))
             meta = {

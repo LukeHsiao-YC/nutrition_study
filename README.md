@@ -56,7 +56,9 @@
    - 開放取用(免下載):
      ```bash
      python3 scripts/ingest.py pmc 42401201     # 用 PMID 抓 PMC 全文
+     python3 scripts/ingest.py fetch 10.1186/…  # 用 DOI 自動抓 OA 全文(Unpaywall/S2)
      ```
+     付費論文的取得方式見 [docs/SETUP-FULLTEXT.md](docs/SETUP-FULLTEXT.md)。
    會產生 `src/content/articles/<id>.md`,`depth: reading`,全文放在內文、DOI 經 Crossref 驗證。
 
 2. **萃取**(在此資料夾開 Claude Code)
